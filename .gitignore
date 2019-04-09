@@ -12,4 +12,5 @@ venv.bak/
 wordlists/*
 lib/*
 amass_output/
+output/
 programs.json
