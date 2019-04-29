@@ -49,6 +49,19 @@ with open('programs.json') as programsFile:
                 for domain in currentDataSet:
                     if domain not in oldDataSet and firstRun == False:
                         print('New domain for ' + programName + ': ' + domain)
+        
+        #add domains to incremental domain list
+        with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
+            currentData = json.load(current)
+            currentDataSet = set(currentData)
+            with open('./output/' + programName + '/incrementalDomains.txt', 'a+') as inc:
+                inc.seek(0)
+                incDomains = set(line.strip() for line in inc)
+                for domain in currentDataSet:
+                    if domain not in incDomains:
+                        inc.write("%s\n" % domain)
+                
+                    
 
 
 
