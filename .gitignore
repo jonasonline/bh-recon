@@ -17,3 +17,4 @@ output/
 programs.json
 programs.temp.json
 amass_config.ini
+lib
