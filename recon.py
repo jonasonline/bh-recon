@@ -1,7 +1,7 @@
 import json, os, subprocess, shutil
 
 firstRun = True
-with open('programs.temp.json') as programsFile:
+with open('programs.json') as programsFile:
     programs = json.load(programsFile)
     
     for program in programs['programs']:
