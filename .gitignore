@@ -18,3 +18,4 @@ programs.json
 programs.temp.json
 amass_config.ini
 lib
+.vscode/settings.json
