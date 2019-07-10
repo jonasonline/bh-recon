@@ -32,7 +32,7 @@ with open('programs.json') as programsFile:
 
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
-                    print(subfinderArguments)
+                    print(amassArguments)
                     subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
