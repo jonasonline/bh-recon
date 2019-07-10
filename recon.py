@@ -6,11 +6,11 @@ def postToSlack(webhookURL, message):
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
 
-firstRun = True
 with open('programs.json') as programsFile:
     programs = json.load(programsFile)
     
     for program in programs['programs']:
+        firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
         amassFolder = './output/' + programName + '/amass'
