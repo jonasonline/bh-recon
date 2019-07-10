@@ -36,7 +36,7 @@ with open('programs.json') as programsFile:
                     subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
-                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w /wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
+                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     print(subfinderArguments)
                     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
