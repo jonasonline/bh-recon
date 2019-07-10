@@ -31,13 +31,13 @@ with open('programs.json') as programsFile:
                                 shutil.copy(domainFolder + '/' + filename, domainFolder + '/' + filename + '.old')
 
                     #run amass
-                    arguments = '-d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
+                    arguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     subprocess.run('amass enum ' + arguments, shell=True)
 
                     #run subfinder
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w /wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     #print(subfinderArguments)
-                    #subprocess.run('~/go/bin/subfinder ' + arguments, shell=True)
+                    subprocess.run('~/go/bin/subfinder ' + arguments, shell=True)
 
                     #Processing unique names
                     for filename in os.listdir(domainFolder):
