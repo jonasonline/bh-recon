@@ -25,16 +25,17 @@ with open('programs.json') as programsFile:
                     
                     #Saving old files for comparison 
                     domainFolder = amassFolder + "/" + domainBase
-                    for filename in os.listdir(domainFolder):
-                        if not filename.endswith('.old'):
-                            shutil.copy(domainFolder + '/' + filename, domainFolder + '/' + filename + '.old')
+                    if os.path.isdir(domainFolder):
+                        for filename in os.listdir(domainFolder):
+                            if not filename.endswith('.old'):
+                                shutil.copy(domainFolder + '/' + filename, domainFolder + '/' + filename + '.old')
 
                     #run amass
                     arguments = '-d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     subprocess.run('amass enum ' + arguments, shell=True)
 
                     #run subfinder
-                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ../wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
+                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w /wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     #print(subfinderArguments)
                     #subprocess.run('~/go/bin/subfinder ' + arguments, shell=True)
 
