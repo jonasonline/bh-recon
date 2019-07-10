@@ -13,6 +13,7 @@ wget -O ./wordlists/directories/content_discovery_nullenc0de.txt https://gist.gi
 sudo apt-get install python3-venv -y
 sudo snap install --classic go
 sudo snap install amass
+go get github.com/subfinder/subfinder
 mkdir lib
 cd lib
 git clone https://github.com/danielmiessler/SecLists.git
@@ -34,10 +35,6 @@ cd masscan
 make
 cd ..
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
-git clone https://github.com/subfinder/subfinder.git 
-cd subfinder
-go build
-cd ..
 cd ..
 
 # Domained tool install disabled. Buggy 
