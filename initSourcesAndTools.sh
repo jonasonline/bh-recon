@@ -1,3 +1,7 @@
+#Creating empty config file
+echo "{}" >> config.json
+#Creating empty programs file
+echo "{}" >> programs.json
 #Downloading word lists
 mkdir ./wordlists/subdomains -p
 mkdir ./wordlists/directories/ -p

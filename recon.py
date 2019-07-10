@@ -1,4 +1,10 @@
-import json, os, subprocess, shutil
+import json, os, subprocess, shutil, requests
+
+def postToSlack(webhookURL, message):
+    requests.post(webhookURL, json={"text":message})
+
+with open('config.json', 'r') as configFile:
+    config = json.load(configFile)
 
 firstRun = True
 with open('programs.json') as programsFile:
@@ -60,7 +66,9 @@ with open('programs.json') as programsFile:
                     oldDataSet = set(oldData)
                     for domain in currentDataSet:
                         if domain not in oldDataSet and firstRun == False:
-                            print('New domain for ' + programName + ': ' + domain)
+                            message = 'New domain for ' + programName + ': ' + domain
+                            print(message)
+                            postToSlack(config["slackWebhookURL"], message)
             
         #add domains to incremental domain list
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
