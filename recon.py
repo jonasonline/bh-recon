@@ -10,10 +10,13 @@ with open('programs.json') as programsFile:
     programs = json.load(programsFile)
     
     for program in programs['programs']:
+        if program['enabled'] == False:
+            continue
         firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
         amassFolder = './output/' + programName + '/amass'
+        subfinderFolder = './output/' + programName + '/subfinder'
         os.makedirs(amassFolder, exist_ok=True, )
                     
         for target in program['scope']:
@@ -24,27 +27,30 @@ with open('programs.json') as programsFile:
                     domainBase = target['domain'].replace('*.','')
                     
                     #Saving old files for comparison 
-                    domainFolder = amassFolder + "/" + domainBase
-                    if os.path.isdir(domainFolder):
-                        for filename in os.listdir(domainFolder):
+                    amassDomainFolder = amassFolder + "/" + domainBase
+                    if os.path.isdir(amassDomainFolder):
+                        for filename in os.listdir(amassDomainFolder):
                             if not filename.endswith('.old'):
-                                shutil.copy(domainFolder + '/' + filename, domainFolder + '/' + filename + '.old')
+                                shutil.copy(amassDomainFolder + '/' + filename, amassDomainFolder + '/' + filename + '.old')
 
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     print(amassArguments)
-                    subprocess.run('amass enum ' + amassArguments, shell=True)
+                    #subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
+                    subfinderOutputFolder = './output/' + programName + '/subfinder/'
+                    if not os.path.exists(subfinderOutputFolder):
+                        os.makedirs(subfinderOutputFolder)
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     print(subfinderArguments)
-                    subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                    #subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
                     #Processing unique names
                     #Amass unique names
-                    for filename in os.listdir(domainFolder):
+                    for filename in os.listdir(amassDomainFolder):
                         if filename.endswith('.json') and not filename.endswith('_data.json'):
-                            with open(domainFolder + '/' + filename) as amassOut:
+                            with open(amassDomainFolder + '/' + filename) as amassOut:
                                 for line in amassOut:
                                     try:    
                                         output = json.loads(line)
@@ -52,6 +58,17 @@ with open('programs.json') as programsFile:
                                     except:
                                         print('Error')
                     #Subfinder unique names
+                    for filename in os.listdir(subfinderOutputFolder):
+                        if filename.endswith('.json'):
+                            with open(subfinderOutputFolder + '/' + filename) as subfinderOut:
+                                output = json.load(subfinderOut)
+                                for domain in output:    
+                                    try:    
+                                        sanitizedDomain = domain.lstrip('.')
+                                        print(sanitizedDomain)
+                                        uniqueDomains.add(sanitizedDomain)        
+                                    except:
+                                        print('Error')
                     
 
         #compare old and new current domains
