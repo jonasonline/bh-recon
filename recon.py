@@ -17,7 +17,14 @@ with open('programs.json') as programsFile:
         programName = program['programName']
         amassFolder = './output/' + programName + '/amass'
         subfinderFolder = './output/' + programName + '/subfinder'
+        masscanFolder = './output/' + programName + '/masscan'
+        digFolder = './output/' + programName + '/dig'
+        gobusterFolder = './output/' + programName + '/gobuster'
         os.makedirs(amassFolder, exist_ok=True, )
+        os.makedirs(subfinderFolder, exist_ok=True, )
+        os.makedirs(masscanFolder, exist_ok=True, )
+        os.makedirs(digFolder, exist_ok=True, )
+        os.makedirs(gobusterFolder, exist_ok=True, )
                     
         for target in program['scope']:
             if target['inScope'] == True:
