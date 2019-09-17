@@ -43,7 +43,7 @@ with open('programs.json') as programsFile:
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     print(amassArguments)
-                    #subprocess.run('amass enum ' + amassArguments, shell=True)
+                    subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
                     subfinderOutputFolder = './output/' + programName + '/subfinder/'
@@ -51,7 +51,7 @@ with open('programs.json') as programsFile:
                         os.makedirs(subfinderOutputFolder)
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     print(subfinderArguments)
-                    #subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                    subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
                     #Processing unique names
                     #Amass unique names
@@ -108,3 +108,10 @@ with open('programs.json') as programsFile:
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
+        
+        #port scan domains
+        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
+                domains.seek(0)
+                for domain in domains:
+                    subprocess.run('dig +short ' + domain + ' | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/' + programName + '/masscan/' + domain + '.{}.json', shell=True)
+                    #dig +short email.s.seek.com.au | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/SEEK/masscan/email.s.seek.com.au.{}.json

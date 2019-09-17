@@ -14,6 +14,7 @@ sudo apt-get install python3-venv -y
 sudo snap install --classic go
 sudo snap install amass
 go get github.com/subfinder/subfinder
+sudo apt-get masscan -y
 mkdir lib
 cd lib
 git clone https://github.com/danielmiessler/SecLists.git
