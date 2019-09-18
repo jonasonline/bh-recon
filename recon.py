@@ -1,4 +1,10 @@
-import json, os, subprocess, shutil, requests
+import json, os, subprocess, shutil, requests, argparse
+
+parser = argparse.ArgumentParser(description='Doing recon.')
+parser.add_argument('--program', help="Specify a program name ju run that program only.")
+parser.add_argument('--fast', action='store_const', const=True, help="Skip looking for new sub domains")
+args = parser.parse_args()
+
 
 def postToSlack(webhookURL, message):
     requests.post(webhookURL, json={"text":message})
@@ -113,5 +119,6 @@ with open('programs.json') as programsFile:
         with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
-                    subprocess.run('dig +short ' + domain + ' | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/' + programName + '/masscan/' + domain + '.{}.json', shell=True)
+                    subprocess.run('sudo digAndMasscan.sh ' + domain + ' ' + programName, shell=True)
+                    #subprocess.run('dig +short ' + domain + ' | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/' + programName + '/masscan/' + domain + '.{}.json', shell=True)
                     #dig +short email.s.seek.com.au | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/SEEK/masscan/email.s.seek.com.au.{}.json

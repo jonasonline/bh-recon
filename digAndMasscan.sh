@@ -1,0 +1,1 @@
+dig +short $1 | xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/$2/masscan/$1.{}.json

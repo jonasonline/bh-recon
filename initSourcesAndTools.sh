@@ -38,6 +38,9 @@ cd ..
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
 cd ..
 
+sudo chown root:root digAndMasscan.sh
+sudo chmod 700 digAndMasscan.sh
+
 # Domained tool install disabled. Buggy 
 # sudo apt-get install libldns-dev -y
 # git clone https://github.com/TypeError/domained.git
