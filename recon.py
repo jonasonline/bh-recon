@@ -14,10 +14,12 @@ with open('config.json', 'r') as configFile:
 
 with open('programs.json') as programsFile:
     programs = json.load(programsFile)
-    
     for program in programs['programs']:
         if program['enabled'] == False:
             continue
+        if args.program and program['programName'] != args.program:
+            continue
+        
         firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
@@ -49,7 +51,8 @@ with open('programs.json') as programsFile:
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     print(amassArguments)
-                    subprocess.run('amass enum ' + amassArguments, shell=True)
+                    if args.fast == None:
+                        subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
                     subfinderOutputFolder = './output/' + programName + '/subfinder/'
@@ -57,7 +60,8 @@ with open('programs.json') as programsFile:
                         os.makedirs(subfinderOutputFolder)
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     print(subfinderArguments)
-                    subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                    if args.fast == None:
+                        subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
                     #Processing unique names
                     #Amass unique names
