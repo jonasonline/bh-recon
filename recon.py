@@ -2,7 +2,8 @@ import json, os, subprocess, shutil, requests, argparse
 
 parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
-parser.add_argument('--fast', action='store_const', const=True, help="Skip looking for new sub domains")
+parser.add_argument('--fast', action='store_const', const=True, help="Skip looking for new sub domains and port scanning")
+parser.add_argument('--noslack', action='store_const', const=True, help="Skip posting to Slack")
 args = parser.parse_args()
 
 
@@ -102,7 +103,7 @@ with open('programs.json') as programsFile:
                     oldData = json.load(old)
                     oldDataSet = set(oldData)
                     for domain in currentDataSet:
-                        if domain not in oldDataSet and firstRun == False:
+                        if domain not in oldDataSet and firstRun == False and args.noslack == None:
                             message = 'New domain for ' + programName + ': ' + domain
                             print(message)
                             postToSlack(config["slackWebhookURL"], message)
@@ -120,9 +121,8 @@ with open('programs.json') as programsFile:
                         inc.write("%s\n" % domain)
         
         #port scan domains
-        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
+        if args.fast == None:
+            with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
-                    subprocess.run('sudo digAndMasscan.sh ' + domain + ' ' + programName, shell=True)
-                    #subprocess.run('dig +short ' + domain + ' | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/' + programName + '/masscan/' + domain + '.{}.json', shell=True)
-                    #dig +short email.s.seek.com.au | sudo xargs -I{} masscan {} -p1-65535 --rate 1000 -oJ output/SEEK/masscan/email.s.seek.com.au.{}.json
+                    subprocess.run('sudo ./digAndMasscan.sh ' + domain + ' ' + programName, shell=True)

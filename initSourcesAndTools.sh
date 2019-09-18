@@ -40,6 +40,10 @@ cd ..
 
 sudo chown root:root digAndMasscan.sh
 sudo chmod 700 digAndMasscan.sh
+sudo chmod +x digAndMasscan.sh
+INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "digAndMasscan.sh")
+[[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/digAndMasscan.sh"
+
 
 # Domained tool install disabled. Buggy 
 # sudo apt-get install libldns-dev -y
