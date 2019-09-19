@@ -2,7 +2,8 @@ import json, os, subprocess, shutil, requests, argparse
 
 parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
-parser.add_argument('--fast', action='store_const', const=True, help="Skip looking for new sub domains and port scanning")
+parser.add_argument('--nodomainrecon', action='store_const', const=True, help="Skip looking for new sub domains")
+parser.add_argument('--noportscan', action='store_const', const=True, help="Skip port scan")
 parser.add_argument('--noslack', action='store_const', const=True, help="Skip posting to Slack")
 args = parser.parse_args()
 
@@ -52,7 +53,7 @@ with open('programs.json') as programsFile:
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     print(amassArguments)
-                    if args.fast == None:
+                    if args.nodomainrecon == None:
                         subprocess.run('amass enum ' + amassArguments, shell=True)
 
                     #run subfinder
@@ -61,7 +62,7 @@ with open('programs.json') as programsFile:
                         os.makedirs(subfinderOutputFolder)
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
                     print(subfinderArguments)
-                    if args.fast == None:
+                    if args.nodomainrecon == None:
                         subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
                     #Processing unique names
@@ -121,8 +122,17 @@ with open('programs.json') as programsFile:
                         inc.write("%s\n" % domain)
         
         #port scan domains
-        if args.fast == None:
+        if args.noportscan == None:
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
                     subprocess.run('sudo ./digAndMasscan.sh ' + domain + ' ' + programName, shell=True)
+
+        #Content discovery
+        scannedDomains = set([])
+        if os.path.isdir(masscanFolder):
+                        for filename in os.listdir(masscanFolder):
+                            currentDomain = filename.split("@")[0]
+                            if currentDomain not in scannedDomains:
+                                print(currentDomain)
+                            scannedDomains.add(currentDomain)

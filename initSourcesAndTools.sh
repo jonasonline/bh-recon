@@ -14,6 +14,7 @@ sudo apt-get install python3-venv -y
 sudo snap install --classic go
 sudo snap install amass
 go get github.com/subfinder/subfinder
+go get github.com/ffuf/ffuf
 sudo apt-get masscan -y
 mkdir lib
 cd lib
