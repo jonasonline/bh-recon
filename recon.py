@@ -84,7 +84,6 @@ with open('programs.json') as programsFile:
                                 for domain in output:    
                                     try:    
                                         sanitizedDomain = domain.lstrip('.')
-                                        print(sanitizedDomain)
                                         uniqueDomains.add(sanitizedDomain)        
                                     except:
                                         print('Error')
@@ -126,7 +125,8 @@ with open('programs.json') as programsFile:
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
-                    subprocess.run('sudo ./digAndMasscan.sh ' + domain + ' ' + programName, shell=True)
+                    scriptArguments = domain + ' ' + programName
+                    subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
 
         #Content discovery
         scannedDomains = set([])
