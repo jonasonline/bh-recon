@@ -30,6 +30,7 @@ with open('programs.json') as programsFile:
         masscanFolder = './output/' + programName + '/masscan'
         digFolder = './output/' + programName + '/dig'
         gobusterFolder = './output/' + programName + '/gobuster'
+        nmapFolder = './output/' + programName + '/nmap'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -125,7 +126,7 @@ with open('programs.json') as programsFile:
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
-                    scriptArguments = domain + ' ' + programName
+                    scriptArguments = domain.rstrip() + '' + programName
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
 
         #Content discovery
@@ -135,4 +136,5 @@ with open('programs.json') as programsFile:
                             currentDomain = filename.split("@")[0]
                             if currentDomain not in scannedDomains:
                                 print(currentDomain)
+
                             scannedDomains.add(currentDomain)

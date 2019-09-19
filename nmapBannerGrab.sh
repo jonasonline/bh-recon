@@ -1,0 +1,1 @@
+nmap -sS -sV -p $1 -v -n -Pn --script banner $2 -oG output/$3/nmap/$1@$2.txt.grep -oN output/$3/nmap/$1@$2.txt

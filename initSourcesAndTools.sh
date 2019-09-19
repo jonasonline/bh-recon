@@ -45,6 +45,11 @@ sudo chmod +x digAndMasscan.sh
 INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "digAndMasscan.sh")
 [[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/digAndMasscan.sh"
 
+sudo chown root:root nmapBannerGrab.sh
+sudo chmod 700 nmapBannerGrab.sh
+sudo chmod +x nmapBannerGrab.sh
+INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "nmapBannerGrab.sh")
+[[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/nmapBannerGrab.sh"
 
 # Domained tool install disabled. Buggy 
 # sudo apt-get install libldns-dev -y
