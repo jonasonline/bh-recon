@@ -4,6 +4,7 @@ parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
 parser.add_argument('--nodomainrecon', action='store_const', const=True, help="Skip looking for new sub domains")
 parser.add_argument('--noportscan', action='store_const', const=True, help="Skip port scan")
+parser.add_argument('--nobanner', action='store_const', const=True, help="Skip banner grabing")
 parser.add_argument('--noslack', action='store_const', const=True, help="Skip posting to Slack")
 args = parser.parse_args()
 
@@ -31,6 +32,7 @@ with open('programs.json') as programsFile:
         digFolder = './output/' + programName + '/dig'
         gobusterFolder = './output/' + programName + '/gobuster'
         nmapFolder = './output/' + programName + '/nmap'
+        ffufFolder = './output/' + programName + '/ffuf'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -128,13 +130,34 @@ with open('programs.json') as programsFile:
                 for domain in domains:
                     scriptArguments = domain.rstrip() + '' + programName
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
+        #BanerGrabbing
+        if args.nobanner == None:
+            scannedDomains = set([])
+            if os.path.isdir(masscanFolder):
+                for filename in os.listdir(masscanFolder):
+                    currentDomain = filename.split("@")[0]
+                    if currentDomain not in scannedDomains:
+                        print(currentDomain)
+                        with open(filename, 'r') as masscanOutFile:
+                            masscanOut = json.load(masscanOutFile)
+                            print(masscanOut)
+                            print('Not implemented')
+                            #scriptArguments = 
+                            #subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+                            #scannedDomains.add(currentDomain)
 
         #Content discovery
-        scannedDomains = set([])
-        if os.path.isdir(masscanFolder):
-                        for filename in os.listdir(masscanFolder):
-                            currentDomain = filename.split("@")[0]
-                            if currentDomain not in scannedDomains:
-                                print(currentDomain)
+        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
+            for domain in domains:
+                urlHttp = "http://" + domain.rstrip()
+                scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttp + '-o ./output/' + programName + '/ffuf/http@' + domain + '.json -s'
+                subprocess.run('ffuf ' + scriptArguments, shell=True)
 
-                            scannedDomains.add(currentDomain)
+
+
+                    
+                    
+                        
+
+
+                
