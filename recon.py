@@ -1,4 +1,4 @@
-import json, os, subprocess, shutil, requests, argparse
+import json, os, subprocess, shutil, requests, argparse, datetime
 
 parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
@@ -6,11 +6,16 @@ parser.add_argument('--nodomainrecon', action='store_const', const=True, help="S
 parser.add_argument('--noportscan', action='store_const', const=True, help="Skip port scan")
 parser.add_argument('--nobanner', action='store_const', const=True, help="Skip banner grabing")
 parser.add_argument('--noslack', action='store_const', const=True, help="Skip posting to Slack")
+parser.add_argument('--nohttp', action='store_const', const=True, help="Skip http discovery")
+parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
 args = parser.parse_args()
 
 
 def postToSlack(webhookURL, message):
     requests.post(webhookURL, json={"text":message})
+def myconverter(o):
+    if isinstance(o, datetime.datetime):
+        return o.__str__()
 
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
@@ -122,7 +127,24 @@ with open('programs.json') as programsFile:
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
-        
+
+            contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
+            if not os.path.exists(contentDomainsFilePath):
+                with open(contentDomainsFilePath, 'w+') as contentDomains:
+                    print('Created file: ' + contentDomainsFilePath)
+            with open(contentDomainsFilePath, 'r') as contentDomains:
+                contentDomains.seek(0)
+                if contentDomains.read(1):
+                    contentDomains.seek(0)    
+                    incrementalContentDomains = json.load(contentDomains)
+                else:
+                    incrementalContentDomains = {}
+                for domain in currentDataSet:
+                    if domain not in incrementalContentDomains:
+                        incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
+            with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
+                json.dump(incrementalContentDomains, contentDomains, default = myconverter)
+
         #port scan domains
         if args.noportscan == None:
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
@@ -149,9 +171,15 @@ with open('programs.json') as programsFile:
         #Content discovery
         with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
             for domain in domains:
-                urlHttp = "http://" + domain.rstrip()
-                scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttp + '-o ./output/' + programName + '/ffuf/http@' + domain + '.json -s'
-                subprocess.run('ffuf ' + scriptArguments, shell=True)
+                if args.nohttp == None and args.nocontent == None:
+                    urlHttp = "http://" + domain.rstrip()
+                    scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttp + '-o ./output/' + programName + '/ffuf/http@' + domain + '.json -s -t 80 -timeout 3'
+                    subprocess.run('ffuf ' + scriptArguments, shell=True)
+
+                if args.nocontent == None:
+                    urlHttps = "https://" + domain.rstrip()
+                    scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttps + '-o ./output/' + programName + '/ffuf/https@' + domain + '.json -s -t 80 -timeout 3 -r'
+                    subprocess.run('ffuf ' + scriptArguments, shell=True)
 
 
 
