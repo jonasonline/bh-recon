@@ -195,8 +195,11 @@ with open('programs.json') as programsFile:
                                     scriptArguments += 'lib/SecLists/Discovery/Web-Content/SVNDigger/all.txt '
                             scriptArguments += '-u ' + urlHttps + ' -o ' + outfileHttps + ' '
                             if 'FilterSize' in contentDomains[domain]:
-                                print('here')
                                 scriptArguments += ' -fs ' + contentDomains[domain]['FilterSize']
+                            if 'RequestDelay' in contentDomains[domain]:
+                                scriptArguments += ' -p ' + contentDomains[domain]['RequestDelay']
+                            if 'FilterWords' in contentDomains[domain]:
+                                scriptArguments += ' -fw ' + contentDomains[domain]['FilterWords']
                             print(scriptArguments)
                             subprocess.run('~/go/bin/ffuf ' + scriptArguments, shell=True)
 
