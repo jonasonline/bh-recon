@@ -69,7 +69,7 @@ with open('programs.json') as programsFile:
                     if not os.path.exists(subfinderOutputFolder):
                         os.makedirs(subfinderOutputFolder)
                     subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
-                    print(subfinderArguments)
+                    #print(subfinderArguments)
                     if args.nodomainrecon == None:
                         subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
@@ -139,9 +139,12 @@ with open('programs.json') as programsFile:
                     incrementalContentDomains = json.load(contentDomains)
                 else:
                     incrementalContentDomains = {}
-                for domain in currentDataSet:
-                    if domain not in incrementalContentDomains:
-                        incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
+        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as inc:
+            inc.seek(0)
+            incDomains = set(line.strip() for line in inc)
+            for domain in incDomains:
+                if domain not in incrementalContentDomains:
+                    incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
             with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
                 json.dump(incrementalContentDomains, contentDomains, default = myconverter)
 
@@ -169,17 +172,33 @@ with open('programs.json') as programsFile:
                             #scannedDomains.add(currentDomain)
 
         #Content discovery
-        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
-            for domain in domains:
+        with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
+            domains.seek(0)
+            contentDomains = json.load(domains)
+            for domain in contentDomains:
                 if args.nohttp == None and args.nocontent == None:
-                    urlHttp = "http://" + domain.rstrip()
-                    scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttp + '-o ./output/' + programName + '/ffuf/http@' + domain + '.json -s -t 80 -timeout 3'
-                    subprocess.run('ffuf ' + scriptArguments, shell=True)
-
+                    urlHttp = "http://" + domain
+                    #TODO
+                    #subprocess.run('ffuf ' + scriptArguments, shell=True)
                 if args.nocontent == None:
-                    urlHttps = "https://" + domain.rstrip()
-                    scriptArguments = '-w wordlists/directories/content_discovery_nullenc0de.txt -u ' + urlHttps + '-o ./output/' + programName + '/ffuf/https@' + domain + '.json -s -t 80 -timeout 3 -r'
-                    subprocess.run('ffuf ' + scriptArguments, shell=True)
+                    if 'Status' in contentDomains[domain]:
+                        if contentDomains[domain]['Status'] == 'Enabled':
+                            urlHttps = "https://" + domain + '/FUZZ'
+                            outfileHttps = './output/' + programName + '/ffuf/https@' + domain + '.json'
+                            if os.path.exists(outfileHttps):
+                                shutil.copyfile(outfileHttps, outfileHttps + '.prev.json')
+                            scriptArguments = ' -t 100 -timeout 3 -r -w '
+                            if 'ContentScanLevel' in contentDomains[domain]:
+                                if contentDomains[domain]['ContentScanLevel'] == 'Full':
+                                    scriptArguments += 'wordlists/directories/content_discovery_nullenc0de.txt '
+                            else:
+                                    scriptArguments += 'lib/SecLists/Discovery/Web-Content/SVNDigger/all.txt '
+                            scriptArguments += '-u ' + urlHttps + ' -o ' + outfileHttps + ' '
+                            if 'FilterSize' in contentDomains[domain]:
+                                print('here')
+                                scriptArguments += ' -fs ' + contentDomains[domain]['FilterSize']
+                            print(scriptArguments)
+                            subprocess.run('~/go/bin/ffuf ' + scriptArguments, shell=True)
 
 
 
