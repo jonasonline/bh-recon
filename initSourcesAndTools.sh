@@ -15,6 +15,7 @@ sudo snap install --classic go
 sudo snap install amass
 go get github.com/subfinder/subfinder
 go get github.com/ffuf/ffuf
+go get github.com/tomnomnom/waybackurls
 sudo apt-get masscan -y
 mkdir lib
 cd lib

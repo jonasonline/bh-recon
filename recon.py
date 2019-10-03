@@ -38,11 +38,15 @@ with open('programs.json') as programsFile:
         gobusterFolder = './output/' + programName + '/gobuster'
         nmapFolder = './output/' + programName + '/nmap'
         ffufFolder = './output/' + programName + '/ffuf'
+        eyewitnessFolder = './output/' + programName + '/eyewitness'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
         os.makedirs(digFolder, exist_ok=True, )
         os.makedirs(gobusterFolder, exist_ok=True, )
+        os.makedirs(nmapFolder, exist_ok=True, )
+        os.makedirs(ffufFolder, exist_ok=True, )
+        os.makedirs(eyewitnessFolder, exist_ok=True, )
                     
         for target in program['scope']:
             if target['inScope'] == True:
@@ -185,8 +189,8 @@ with open('programs.json') as programsFile:
                     if 'Status' in contentDomains[domain]:
                         if contentDomains[domain]['Status'] == 'Enabled':
                             urlHttps = "https://" + domain
-                            outfileHttps = './output/' + programName + '/ffuf/https@' + domain + '.json'
-                            outfileHttpsIncremental = './output/' + programName + '/ffuf/https@' + domain + '.incremental.txt'
+                            outfileHttps = ffufFolder + '/https@' + domain + '.json'
+                            outfileHttpsIncremental = ffufFolder + '/https@' + domain + '.incremental.txt'
                             """ if os.path.exists(outfileHttps):
                                 shutil.copyfile(outfileHttps, outfileHttps + '.prev.json') """
                             scriptArguments = ' -t 100 -timeout 3 -r -w '
