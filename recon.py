@@ -128,17 +128,18 @@ with open('programs.json') as programsFile:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
 
-            contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
-            if not os.path.exists(contentDomainsFilePath):
-                with open(contentDomainsFilePath, 'w+') as contentDomains:
-                    print('Created file: ' + contentDomainsFilePath)
-            with open(contentDomainsFilePath, 'r') as contentDomains:
-                contentDomains.seek(0)
-                if contentDomains.read(1):
-                    contentDomains.seek(0)    
-                    incrementalContentDomains = json.load(contentDomains)
-                else:
-                    incrementalContentDomains = {}
+        #add domains to incremental content domain list
+        contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
+        if not os.path.exists(contentDomainsFilePath):
+            with open(contentDomainsFilePath, 'w+') as contentDomains:
+                print('Created file: ' + contentDomainsFilePath)
+        with open(contentDomainsFilePath, 'r') as contentDomains:
+            contentDomains.seek(0)
+            if contentDomains.read(1):
+                contentDomains.seek(0)    
+                incrementalContentDomains = json.load(contentDomains)
+            else:
+                incrementalContentDomains = {}
         with open('./output/' + programName + '/incrementalDomains.txt', 'r') as inc:
             inc.seek(0)
             incDomains = set(line.strip() for line in inc)
@@ -183,17 +184,18 @@ with open('programs.json') as programsFile:
                 if args.nocontent == None:
                     if 'Status' in contentDomains[domain]:
                         if contentDomains[domain]['Status'] == 'Enabled':
-                            urlHttps = "https://" + domain + '/FUZZ'
+                            urlHttps = "https://" + domain
                             outfileHttps = './output/' + programName + '/ffuf/https@' + domain + '.json'
-                            if os.path.exists(outfileHttps):
-                                shutil.copyfile(outfileHttps, outfileHttps + '.prev.json')
+                            outfileHttpsIncremental = './output/' + programName + '/ffuf/https@' + domain + '.incremental.txt'
+                            """ if os.path.exists(outfileHttps):
+                                shutil.copyfile(outfileHttps, outfileHttps + '.prev.json') """
                             scriptArguments = ' -t 100 -timeout 3 -r -w '
                             if 'ContentScanLevel' in contentDomains[domain]:
                                 if contentDomains[domain]['ContentScanLevel'] == 'Full':
                                     scriptArguments += 'wordlists/directories/content_discovery_nullenc0de.txt '
                             else:
                                     scriptArguments += 'lib/SecLists/Discovery/Web-Content/SVNDigger/all.txt '
-                            scriptArguments += '-u ' + urlHttps + ' -o ' + outfileHttps + ' '
+                            scriptArguments += '-u ' + urlHttps + '/FUZZ -o ' + outfileHttps + ' '
                             if 'FilterSize' in contentDomains[domain]:
                                 scriptArguments += ' -fs ' + contentDomains[domain]['FilterSize']
                             if 'RequestDelay' in contentDomains[domain]:
@@ -202,6 +204,25 @@ with open('programs.json') as programsFile:
                                 scriptArguments += ' -fw ' + contentDomains[domain]['FilterWords']
                             print(scriptArguments)
                             subprocess.run('~/go/bin/ffuf ' + scriptArguments, shell=True)
+                            #add https content to incremental content list
+                            addedContent = False
+                            with open(outfileHttps, 'r') as current:
+                                currentData = json.load(current)
+                                with open(outfileHttpsIncremental, 'a+') as inc:
+                                    inc.seek(0)
+                                    incContent = set(line.strip() for line in inc)
+                                    if 'results' in currentData:
+                                        for content in currentData['results']:
+                                            contentURL = urlHttps + '/' + content['input']
+                                            if contentURL not in incContent:
+                                                print('Adding ' + contentURL + ' to incremental list for ' + urlHttps)
+                                                inc.write("%s\n" % contentURL)
+                                                addedDomains = True
+                            if addedContent and args.noslack == None:
+                                message = 'New content for ' + programName + ' domain: ' + domain
+                                print(message)
+                                postToSlack(config["slackWebhookURL"], message)
+
 
 
 
