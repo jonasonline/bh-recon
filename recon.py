@@ -132,6 +132,12 @@ with open('programs.json') as programsFile:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
 
+        #find live domains
+        massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOut.json"
+        subprocess.run('./lib/massdns/bin/massdns ' + amassArguments, shell=True)
+
+        #TODO Process massdns output
+
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
         if not os.path.exists(contentDomainsFilePath):
