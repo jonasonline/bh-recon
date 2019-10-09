@@ -138,6 +138,9 @@ with open('programs.json') as programsFile:
 
         #TODO Process massdns output
 
+        #find URLs from wayback machine
+        subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
         if not os.path.exists(contentDomainsFilePath):
