@@ -7,7 +7,10 @@ parser.add_argument('--noportscan', action='store_const', const=True, help="Skip
 parser.add_argument('--nobanner', action='store_const', const=True, help="Skip banner grabing")
 parser.add_argument('--noslack', action='store_const', const=True, help="Skip posting to Slack")
 parser.add_argument('--nohttp', action='store_const', const=True, help="Skip http discovery")
+parser.add_argument('--nomassdns', action='store_const', const=True, help="Skip massdns discovery")
+parser.add_argument('--nowayback', action='store_const', const=True, help="Skip Wayback machine discovery")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
+
 args = parser.parse_args()
 
 
@@ -133,13 +136,19 @@ with open('programs.json') as programsFile:
                         inc.write("%s\n" % domain)
 
         #find live domains
-        massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOut.json"
-        subprocess.run('./lib/massdns/bin/massdns ' + amassArguments, shell=True)
+        if args.nomassdns == None:
+            massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOutLive.json"
+            subprocess.run('./lib/massdns/bin/massdns ' + amassArguments, shell=True)
 
         #TODO Process massdns output
+        #TODO Implement dnsgen
+        #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
 
         #find URLs from wayback machine
-        subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+        if args.nowayback == None:
+            subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+            #cleaning output
+            subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
 
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
@@ -169,7 +178,7 @@ with open('programs.json') as programsFile:
                 for domain in domains:
                     scriptArguments = domain.rstrip() + '' + programName
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
-        #BanerGrabbing
+        #BannerGrabbing
         if args.nobanner == None:
             scannedDomains = set([])
             if os.path.isdir(masscanFolder):

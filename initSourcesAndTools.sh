@@ -10,6 +10,7 @@ wget -O ./wordlists/directories/jhaddix_content_discovery_all.txt https://gist.g
 wget -O ./wordlists/directories/content_discovery_nullenc0de.txt https://gist.githubusercontent.com/nullenc0de/96fb9e934fc16415fbda2f83f08b28e7/raw/146f367110973250785ced348455dc5173842ee4/content_discovery_nullenc0de.txt
 
 #installing pre-reqs
+sudo apt install python3-pip -y
 sudo apt-get install python3-venv -y
 sudo snap install --classic go
 sudo snap install amass
@@ -17,6 +18,8 @@ go get github.com/subfinder/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
 sudo apt-get masscan -y
+pip3 install dnsgen
+PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 mkdir lib
 cd lib
 git clone https://github.com/danielmiessler/SecLists.git
