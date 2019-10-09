@@ -217,7 +217,7 @@ with open('programs.json') as programsFile:
                                     scriptArguments += 'wordlists/directories/content_discovery_nullenc0de.txt '
                             else:
                                     scriptArguments += 'lib/SecLists/Discovery/Web-Content/SVNDigger/all.txt '
-                            scriptArguments += '-u ' + urlHttps + '/FUZZ -o ' + outfileHttps + ' '
+                            scriptArguments += '-u ' + urlHttps + '/FUZZ -o ' + outfileHttps + ' -ac '
                             if 'FilterSize' in contentDomains[domain]:
                                 scriptArguments += ' -fs ' + contentDomains[domain]['FilterSize']
                             if 'RequestDelay' in contentDomains[domain]:
