@@ -72,7 +72,7 @@ with open('programs.json') as programsFile:
                     subfinderOutputFolder = './output/' + programName + '/subfinder/'
                     if not os.path.exists(subfinderOutputFolder):
                         os.makedirs(subfinderOutputFolder)
-                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8' 
+                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8, 2.2.2.2' 
                     #print(subfinderArguments)
                     if args.nodomainrecon == None:
                         subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
