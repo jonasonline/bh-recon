@@ -46,6 +46,7 @@ def findWildcardDomains(jsonFilePath):
                             socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
                             print("Success: " + tryDomain)
                             probableWildcardDomains.add(tryDomain)
+                            break
                         except:
                             pass
             except:
