@@ -145,7 +145,8 @@ with open('programs.json') as programsFile:
                                     try:    
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
-                                            if wildcardDomain in sanitizedDomain:
+                                            tryWildcardDomain = "." + wildcardDomain
+                                            if tryWildcardDomain in sanitizedDomain:
                                                 print("wild: " + wildcardDomain + " sanit: " + sanitizedDomain)
                                                 addDomain = False
                                                 break
