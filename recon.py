@@ -21,7 +21,6 @@ def myconverter(o):
         return o.__str__()
 def findWildcardDomains(jsonFilePath):
     with open(jsonFilePath) as subOut:
-        possibleWildcardDomains = set([]) 
         probableWildcardDomains = set([]) 
         data = subOut.read()
         subOut.seek(0)
@@ -29,7 +28,6 @@ def findWildcardDomains(jsonFilePath):
         for domain in output:    
             try:    
                 sanitizedDomain = domain.lstrip('.')
-                
                 #print(sanitizedDomain)
                 res = get_tld("https://" + sanitizedDomain, fail_silently=True, as_object=True)
                 baseDomain = res.fld
@@ -45,9 +43,9 @@ def findWildcardDomains(jsonFilePath):
                         print("testing: " + probe)
                         try:
                             socket.gethostbyname(probe)
-                            socket.gethostbyname("testingforwildcard." + subDomain)
-                            socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + subDomain)
-                            probableWildcardDomains.add(subDomain)
+                            socket.gethostbyname("testingforwildcard." + tryDomain)
+                            socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
+                            probableWildcardDomains.add(tryDomain)
                         except:
                             break
             except:
