@@ -222,13 +222,13 @@ with open('programs.json') as programsFile:
                 json.dump(incrementalContentDomains, contentDomains, default = myconverter)
 
         #port scan domains
-        print("before port scan")
         if args.noportscan == None:
             print("Starting port scan")
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
                     scriptArguments = domain.rstrip() + '' + programName
+                    print(scriptArguments)
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
         #BannerGrabbing
@@ -286,22 +286,25 @@ with open('programs.json') as programsFile:
 
                             #add https content to incremental content list
                             addedContent = False
-                            with open(outfileHttps, 'r') as current:
-                                currentData = json.load(current)
-                                with open(outfileHttpsIncremental, 'a+') as inc:
-                                    inc.seek(0)
-                                    incContent = set(line.strip() for line in inc)
-                                    if 'results' in currentData:
-                                        for content in currentData['results']:
-                                            contentURL = urlHttps + '/' + content['input']
-                                            if contentURL not in incContent:
-                                                print('Adding ' + contentURL + ' to incremental list for ' + urlHttps)
-                                                inc.write("%s\n" % contentURL)
-                                                addedDomains = True
-                            if addedContent and args.noslack == None:
-                                message = 'New content for ' + programName + ' domain: ' + domain
-                                print(message)
-                                postToSlack(config["slackWebhookURL"], message)
+                            try:
+                                with open(outfileHttps, 'r') as current:
+                                    currentData = json.load(current)
+                                    with open(outfileHttpsIncremental, 'a+') as inc:
+                                        inc.seek(0)
+                                        incContent = set(line.strip() for line in inc)
+                                        if 'results' in currentData:
+                                            for content in currentData['results']:
+                                                contentURL = urlHttps + '/' + content['input']
+                                                if contentURL not in incContent:
+                                                    print('Adding ' + contentURL + ' to incremental list for ' + urlHttps)
+                                                    inc.write("%s\n" % contentURL)
+                                                    addedDomains = True
+                                if addedContent and args.noslack == None:
+                                    message = 'New content for ' + programName + ' domain: ' + domain
+                                    print(message)
+                                    postToSlack(config["slackWebhookURL"], message)
+                            except:
+                                pass
             print("Done running ffuf")
                     
 
