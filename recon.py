@@ -148,8 +148,8 @@ with open('programs.json') as programsFile:
                                     except:
                                         print('Error')
                                     if addDomain:
-                                        print("here: " + sanitizedDomain)
-                                        uniqueDomains.add(sanitizedDomain)        
+                                        uniqueDomains.add(sanitizedDomain)
+        print(uniqueDomains)
         exit()
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
