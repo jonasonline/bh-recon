@@ -145,12 +145,12 @@ with open('programs.json') as programsFile:
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
                                             if wildcardDomain not in sanitizedDomain:
-                                                print ("adding to unique list:" + sanitizedDomain)
-                                                uniqueDomains.add(sanitizedDomain)        
+                                                print("wild: " + wildcardDomain + " Sanitized: " sanitizedDomain)
+                                                #uniqueDomains.add(sanitizedDomain)        
                                     except:
                                         print('Error')
                     
-        exit
+        exit()
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
             firstRun = False
