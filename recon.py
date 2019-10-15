@@ -227,8 +227,7 @@ with open('programs.json') as programsFile:
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
-                    scriptArguments = domain.rstrip() + '' + programName
-                    print(scriptArguments)
+                    scriptArguments = domain.rstrip() + ' ' + programName
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
         #BannerGrabbing
