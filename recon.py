@@ -41,13 +41,13 @@ def findWildcardDomains(jsonFilePath):
                 for subDomain in subDomains:
                     tryDomain = subDomain + "." + tryDomain
                     if data.count(tryDomain) > 50:
-                        probe = "noresult." + possibleWildcardDomain
+                        probe = "noresult." + subDomain
                         print("testing: " + probe)
                         try:
                             socket.gethostbyname(probe)
-                            socket.gethostbyname("testingforwildcard." + possibleWildcardDomain)
-                            socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + possibleWildcardDomain)
-                            probableWildcardDomains.add(possibleWildcardDomain)
+                            socket.gethostbyname("testingforwildcard." + subDomain)
+                            socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + subDomain)
+                            probableWildcardDomains.add(subDomain)
                         except:
                             break
             except:
