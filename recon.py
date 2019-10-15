@@ -222,6 +222,7 @@ with open('programs.json') as programsFile:
                 json.dump(incrementalContentDomains, contentDomains, default = myconverter)
 
         #port scan domains
+        print("before port scan")
         if args.noportscan == None:
             print("Starting port scan")
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
@@ -278,7 +279,11 @@ with open('programs.json') as programsFile:
                             if 'FilterWords' in contentDomains[domain]:
                                 scriptArguments += ' -fw ' + contentDomains[domain]['FilterWords']
                             print(scriptArguments)
-                            subprocess.run('~/go/bin/ffuf ' + scriptArguments, shell=True)
+                            try:
+                                subprocess.run('~/go/bin/ffuf ' + scriptArguments, shell=True)
+                            except:
+                                pass
+
                             #add https content to incremental content list
                             addedContent = False
                             with open(outfileHttps, 'r') as current:
