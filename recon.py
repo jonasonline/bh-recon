@@ -145,7 +145,7 @@ with open('programs.json') as programsFile:
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
                                             if wildcardDomain not in sanitizedDomain:
-                                                print("wild: " + wildcardDomain + " Sanitized: " sanitizedDomain)
+                                                print("wild: " + wildcardDomain + " Sanitized: " + sanitizedDomain)
                                                 #uniqueDomains.add(sanitizedDomain)        
                                     except:
                                         print('Error')
