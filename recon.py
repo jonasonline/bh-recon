@@ -141,15 +141,20 @@ with open('programs.json') as programsFile:
                             with open(subfinderOutputFile) as subfinderOut:
                                 output = json.load(subfinderOut)
                                 for domain in output:    
+                                    addDomain = True
                                     try:    
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
-                                            if wildcardDomain not in sanitizedDomain:
-                                                print("wild: " + wildcardDomain + " Sanitized: " + sanitizedDomain)
-                                                #uniqueDomains.add(sanitizedDomain)        
+                                            if wildcardDomain in sanitizedDomain:
+                                                addDomain = False
+                                                break
+                                    except (KeyboardInterrupt, SystemExit):
+                                        exit()
                                     except:
                                         print('Error')
-                    
+                                    if addDomain:
+                                        print("wild: " + wildcardDomain + " Sanitized: " + sanitizedDomain)
+                                        #uniqueDomains.add(sanitizedDomain)        
         exit()
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
