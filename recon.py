@@ -122,7 +122,7 @@ with open('programs.json') as programsFile:
                                 for line in amassOut:
                                     try:    
                                         output = json.loads(line)
-                                        uniqueDomains.add(output['name'])
+                                        #uniqueDomains.add(output['name'])
                                     except:
                                         print('Error')
                     #Subfinder unique names
