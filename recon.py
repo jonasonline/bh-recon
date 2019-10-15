@@ -1,4 +1,5 @@
-import json, os, subprocess, shutil, requests, argparse, datetime
+import json, os, subprocess, shutil, requests, argparse, datetime, socket
+from tld import get_tld
 
 parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
@@ -13,12 +14,47 @@ parser.add_argument('--nocontent', action='store_const', const=True, help="Skip 
 
 args = parser.parse_args()
 
-
 def postToSlack(webhookURL, message):
     requests.post(webhookURL, json={"text":message})
 def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
+def findWildcardDomains(jsonFilePath):
+    with open(jsonFilePath) as subOut:
+        possibleWildcardDomains = set([]) 
+        probableWildcardDomains = set([]) 
+        data = subOut.read()
+        subOut.seek(0)
+        output = json.load(subOut)
+        for domain in output:    
+            try:    
+                sanitizedDomain = domain.lstrip('.')
+                
+                #print(sanitizedDomain)
+                res = get_tld("https://" + sanitizedDomain, fail_silently=True, as_object=True)
+                baseDomain = res.fld
+                subDomains = sanitizedDomain.split("." + baseDomain) 
+                subDomains = subDomains[0]
+                subDomains = subDomains.split(".")
+                subDomains.reverse()
+                tryDomain = baseDomain
+                for subDomain in subDomains:
+                    tryDomain = subDomain + "." + tryDomain
+                    if data.count(tryDomain) > 3:
+                        possibleWildcardDomains.add(tryDomain)                  
+            except:
+                print('Error')
+        for possibleWildcardDomain in possibleWildcardDomains:       
+            probe = "noresult." + possibleWildcardDomain
+            print("testing: " + probe)
+            try:
+                socket.gethostbyname(probe)
+                socket.gethostbyname("testingforwildcard." + possibleWildcardDomain)
+                socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + possibleWildcardDomain)
+                probableWildcardDomains.add(possibleWildcardDomain)
+            except:
+                continue
+        return probableWildcardDomains
 
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
@@ -98,12 +134,18 @@ with open('programs.json') as programsFile:
                     #Subfinder unique names
                     for filename in os.listdir(subfinderOutputFolder):
                         if filename.endswith('.json'):
-                            with open(subfinderOutputFolder + '/' + filename) as subfinderOut:
+                            subfinderOutputFile = subfinderOutputFolder + '/' + filename
+                            wildcardDomains = findWildcardDomains(subfinderOutputFile)
+                            for wildcardDomain in wildcardDomains:
+                                uniqueDomains.add(wildcardDomain)
+                            with open(subfinderOutputFile) as subfinderOut:
                                 output = json.load(subfinderOut)
                                 for domain in output:    
                                     try:    
                                         sanitizedDomain = domain.lstrip('.')
-                                        uniqueDomains.add(sanitizedDomain)        
+                                        for wildcardDomain in wildcardDomains:
+                                            if wildcardDomain not in sanitizedDomain:
+                                                uniqueDomains.add(sanitizedDomain)        
                                     except:
                                         print('Error')
                     
@@ -207,13 +249,13 @@ with open('programs.json') as programsFile:
         with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
             domains.seek(0)
             contentDomains = json.load(domains)
+            print("Starting content discovery with ffuf")
             for domain in contentDomains:
                 if args.nohttp == None and args.nocontent == None:
                     urlHttp = "http://" + domain
                     #TODO
                     #subprocess.run('ffuf ' + scriptArguments, shell=True)
                 if args.nocontent == None:
-                    print("Starting content discovery with ffuf")
                     if 'Status' in contentDomains[domain]:
                         if contentDomains[domain]['Status'] == 'Enabled':
                             urlHttps = "https://" + domain
@@ -254,7 +296,8 @@ with open('programs.json') as programsFile:
                                 message = 'New content for ' + programName + ' domain: ' + domain
                                 print(message)
                                 postToSlack(config["slackWebhookURL"], message)
-                    print("Done running ffuf")
+            print("Done running ffuf")
+                    
 
 
 
