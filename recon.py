@@ -28,7 +28,6 @@ def findWildcardDomains(jsonFilePath):
         for domain in output:    
             try:    
                 sanitizedDomain = domain.lstrip('.')
-                #print(sanitizedDomain)
                 res = get_tld("https://" + sanitizedDomain, fail_silently=True, as_object=True)
                 baseDomain = res.fld
                 subDomains = sanitizedDomain.split("." + baseDomain) 
@@ -38,7 +37,7 @@ def findWildcardDomains(jsonFilePath):
                 tryDomain = baseDomain
                 for subDomain in subDomains:
                     tryDomain = subDomain + "." + tryDomain
-                    if data.count(tryDomain) > 50:
+                    if data.count(tryDomain) > 10:
                         probe = "noresult." + tryDomain
                         print("testing: " + probe)
                         try:
@@ -143,7 +142,6 @@ with open('programs.json') as programsFile:
                                         for wildcardDomain in wildcardDomains:
                                             tryWildcardDomain = "." + wildcardDomain
                                             if tryWildcardDomain in sanitizedDomain:
-                                                print("wild: " + wildcardDomain + " sanit: " + sanitizedDomain)
                                                 addDomain = False
                                                 break
                                     except (KeyboardInterrupt, SystemExit):
