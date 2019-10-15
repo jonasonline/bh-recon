@@ -40,7 +40,7 @@ def findWildcardDomains(jsonFilePath):
                 tryDomain = baseDomain
                 for subDomain in subDomains:
                     tryDomain = subDomain + "." + tryDomain
-                    if data.count(tryDomain) > 3:
+                    if data.count(tryDomain) > 10:
                         possibleWildcardDomains.add(tryDomain)                  
             except:
                 print('Error')
