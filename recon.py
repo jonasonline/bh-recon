@@ -39,7 +39,7 @@ def findWildcardDomains(jsonFilePath):
                 for subDomain in subDomains:
                     tryDomain = subDomain + "." + tryDomain
                     if data.count(tryDomain) > 50:
-                        probe = "noresult." + subDomain
+                        probe = "noresult." + tryDomain
                         print("testing: " + probe)
                         try:
                             socket.gethostbyname(probe)
