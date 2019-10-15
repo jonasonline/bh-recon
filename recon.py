@@ -40,9 +40,11 @@ def findWildcardDomains(jsonFilePath):
                     if data.count(tryDomain) > 5:
                         probe = "noresult." + tryDomain
                         try:
+                            print("Trying: " + tryDomain)
                             socket.gethostbyname(probe)
                             socket.gethostbyname("testingforwildcard." + tryDomain)
                             socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
+                            print("Success: " + tryDomain)
                             probableWildcardDomains.add(tryDomain)
                         except:
                             pass
