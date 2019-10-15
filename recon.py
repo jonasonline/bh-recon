@@ -40,11 +40,9 @@ def findWildcardDomains(jsonFilePath):
                     if data.count(tryDomain) > 5:
                         probe = "noresult." + tryDomain
                         try:
-                            print("Trying: " + tryDomain)
                             socket.gethostbyname(probe)
                             socket.gethostbyname("testingforwildcard." + tryDomain)
                             socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
-                            print("Success: " + tryDomain)
                             probableWildcardDomains.add(tryDomain)
                             break
                         except:
@@ -103,7 +101,7 @@ with open('programs.json') as programsFile:
                     #print(amassArguments)
                     if args.nodomainrecon == None:
                         print("Starting Amass")
-                        #subprocess.run('amass enum ' + amassArguments, shell=True)
+                        subprocess.run('amass enum ' + amassArguments, shell=True)
                         print("Done running Amass")
 
                     #run subfinder
@@ -114,7 +112,7 @@ with open('programs.json') as programsFile:
                     #print(subfinderArguments)
                     if args.nodomainrecon == None:
                         print("Starting Subfinder")
-                        #subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                        subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
                         print("Done running Subfinder")
 
                     #Processing unique names
@@ -125,7 +123,7 @@ with open('programs.json') as programsFile:
                                 for line in amassOut:
                                     try:    
                                         output = json.loads(line)
-                                        #uniqueDomains.add(output['name'])
+                                        uniqueDomains.add(output['name'])
                                     except:
                                         print('Error')
                     #Subfinder unique names
@@ -152,8 +150,7 @@ with open('programs.json') as programsFile:
                                         print('Error')
                                     if addDomain:
                                         uniqueDomains.add(sanitizedDomain)
-        print(uniqueDomains)
-        exit()
+
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
             firstRun = False
