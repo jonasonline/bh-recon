@@ -55,6 +55,8 @@ sudo chmod +x nmapBannerGrab.sh
 INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "nmapBannerGrab.sh")
 [[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/nmapBannerGrab.sh"
 
+pip3 install -r requirements.txt
+
 # Domained tool install disabled. Buggy 
 # sudo apt-get install libldns-dev -y
 # git clone https://github.com/TypeError/domained.git
