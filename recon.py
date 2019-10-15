@@ -67,18 +67,22 @@ with open('programs.json') as programsFile:
 
                     #run amass
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
-                    print(amassArguments)
+                    #print(amassArguments)
                     if args.nodomainrecon == None:
+                        print("Starting Amass")
                         subprocess.run('amass enum ' + amassArguments, shell=True)
+                        print("Done running Amass")
 
                     #run subfinder
                     subfinderOutputFolder = './output/' + programName + '/subfinder/'
                     if not os.path.exists(subfinderOutputFolder):
                         os.makedirs(subfinderOutputFolder)
-                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 10 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8, 2.2.2.2' 
+                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 100 -nW -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8, 2.2.2.2' 
                     #print(subfinderArguments)
                     if args.nodomainrecon == None:
+                        print("Starting Subfinder")
                         subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                        print("Done running Subfinder")
 
                     #Processing unique names
                     #Amass unique names
@@ -136,6 +140,7 @@ with open('programs.json') as programsFile:
                         inc.write("%s\n" % domain)
 
         #find live domains
+        print("Finding live domains")
         if args.nomassdns == None:
             massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOutLive.json"
             subprocess.run('./lib/massdns/bin/massdns ' + amassArguments, shell=True)
@@ -146,9 +151,11 @@ with open('programs.json') as programsFile:
 
         #find URLs from wayback machine
         if args.nowayback == None:
+            print("Starting Wayback Machine discovery")
             subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
             #cleaning output
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
+            print("Done running Wayback Machine discovery")
 
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
@@ -173,11 +180,13 @@ with open('programs.json') as programsFile:
 
         #port scan domains
         if args.noportscan == None:
+            print("Starting port scan")
             with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
                 domains.seek(0)
                 for domain in domains:
                     scriptArguments = domain.rstrip() + '' + programName
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
+            print("Done running port scan")
         #BannerGrabbing
         if args.nobanner == None:
             scannedDomains = set([])
@@ -204,6 +213,7 @@ with open('programs.json') as programsFile:
                     #TODO
                     #subprocess.run('ffuf ' + scriptArguments, shell=True)
                 if args.nocontent == None:
+                    print("Starting content discovery with ffuf")
                     if 'Status' in contentDomains[domain]:
                         if contentDomains[domain]['Status'] == 'Enabled':
                             urlHttps = "https://" + domain
@@ -244,7 +254,7 @@ with open('programs.json') as programsFile:
                                 message = 'New content for ' + programName + ' domain: ' + domain
                                 print(message)
                                 postToSlack(config["slackWebhookURL"], message)
-
+                    print("Done running ffuf")
 
 
 
