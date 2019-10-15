@@ -106,7 +106,7 @@ with open('programs.json') as programsFile:
                     #print(amassArguments)
                     if args.nodomainrecon == None:
                         print("Starting Amass")
-                        subprocess.run('amass enum ' + amassArguments, shell=True)
+                        #subprocess.run('amass enum ' + amassArguments, shell=True)
                         print("Done running Amass")
 
                     #run subfinder
@@ -117,7 +117,7 @@ with open('programs.json') as programsFile:
                     #print(subfinderArguments)
                     if args.nodomainrecon == None:
                         print("Starting Subfinder")
-                        subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                        #subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
                         print("Done running Subfinder")
 
                     #Processing unique names
@@ -145,11 +145,12 @@ with open('programs.json') as programsFile:
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
                                             if wildcardDomain not in sanitizedDomain:
+                                                print ("adding to unique list:" + sanitizedDomain)
                                                 uniqueDomains.add(sanitizedDomain)        
                                     except:
                                         print('Error')
                     
-
+        exit
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
             firstRun = False
