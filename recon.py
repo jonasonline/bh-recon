@@ -37,17 +37,15 @@ def findWildcardDomains(jsonFilePath):
                 tryDomain = baseDomain
                 for subDomain in subDomains:
                     tryDomain = subDomain + "." + tryDomain
-                    if data.count(tryDomain) > 10:
+                    if data.count(tryDomain) > 5:
                         probe = "noresult." + tryDomain
                         try:
                             socket.gethostbyname(probe)
                             socket.gethostbyname("testingforwildcard." + tryDomain)
                             socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
-                            print(tryDomain)
                             probableWildcardDomains.add(tryDomain)
                         except:
-                            print("breaking")
-                            break
+                            pass
             except:
                 print('Error')
         return probableWildcardDomains
@@ -141,8 +139,8 @@ with open('programs.json') as programsFile:
                                     try:    
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
-                                            tryWildcardDomain = "." + wildcardDomain
-                                            if tryWildcardDomain in sanitizedDomain:
+                                            wildcardDomainSubdomain = "." + wildcardDomain
+                                            if wildcardDomainSubdomain in sanitizedDomain or wildcardDomain == sanitizedDomain :
                                                 addDomain = False
                                                 break
                                     except (KeyboardInterrupt, SystemExit):
@@ -150,7 +148,7 @@ with open('programs.json') as programsFile:
                                     except:
                                         print('Error')
                                     if addDomain:
-                                        print(wildcardDomains)
+                                        print("here: " + sanitizedDomain)
                                         uniqueDomains.add(sanitizedDomain)        
         exit()
         #compare old and new current domains
