@@ -146,6 +146,7 @@ with open('programs.json') as programsFile:
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
                                             if wildcardDomain in sanitizedDomain:
+                                                print("wild: " + wildcardDomain + " sanit: " + sanitizedDomain)
                                                 addDomain = False
                                                 break
                                     except (KeyboardInterrupt, SystemExit):
@@ -153,7 +154,7 @@ with open('programs.json') as programsFile:
                                     except:
                                         print('Error')
                                     if addDomain:
-                                        print("wild: " + wildcardDomain + " Sanitized: " + sanitizedDomain)
+                                        print(wildcardDomains)
                                         #uniqueDomains.add(sanitizedDomain)        
         exit()
         #compare old and new current domains
