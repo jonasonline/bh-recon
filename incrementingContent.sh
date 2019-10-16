@@ -1,0 +1,1 @@
+ls $1 | xargs -I{} cat {} > $2/incrementalContent.txt

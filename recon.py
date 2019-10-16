@@ -65,6 +65,7 @@ with open('programs.json') as programsFile:
         firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
+        outputFolder = './output/' + programName' 
         amassFolder = './output/' + programName + '/amass'
         subfinderFolder = './output/' + programName + '/subfinder'
         masscanFolder = './output/' + programName + '/masscan'
@@ -231,7 +232,7 @@ with open('programs.json') as programsFile:
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
         #BannerGrabbing
-        if args.nobanner == None:
+        """ if args.nobanner == None:
             scannedDomains = set([])
             if os.path.isdir(masscanFolder):
                 for filename in os.listdir(masscanFolder):
@@ -242,9 +243,9 @@ with open('programs.json') as programsFile:
                             masscanOut = json.load(masscanOutFile)
                             print(masscanOut)
                             print('Not implemented')
-                            #scriptArguments = 
-                            #subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                            #scannedDomains.add(currentDomain)
+                            scriptArguments = 
+                            subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+                            scannedDomains.add(currentDomain) """
 
         #Content discovery
         with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
@@ -262,8 +263,6 @@ with open('programs.json') as programsFile:
                             urlHttps = "https://" + domain
                             outfileHttps = ffufFolder + '/https@' + domain + '.json'
                             outfileHttpsIncremental = ffufFolder + '/https@' + domain + '.incremental.txt'
-                            """ if os.path.exists(outfileHttps):
-                                shutil.copyfile(outfileHttps, outfileHttps + '.prev.json') """
                             scriptArguments = ' -t 100 -timeout 3 -r -w '
                             if 'ContentScanLevel' in contentDomains[domain]:
                                 if contentDomains[domain]['ContentScanLevel'] == 'Full':
@@ -305,6 +304,11 @@ with open('programs.json') as programsFile:
                             except:
                                 pass
             print("Done running ffuf")
+        #Incrementing content
+        scriptArguments = ffufFolder + ' ' + outputFolder
+        subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
+
+        #Running way
                     
 
 
