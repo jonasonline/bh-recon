@@ -65,7 +65,7 @@ with open('programs.json') as programsFile:
         firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
-        outputFolder = './output/' + programName' 
+        outputFolder = './output/' + programName 
         amassFolder = './output/' + programName + '/amass'
         subfinderFolder = './output/' + programName + '/subfinder'
         masscanFolder = './output/' + programName + '/masscan'
