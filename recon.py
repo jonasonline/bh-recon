@@ -19,7 +19,12 @@ def postToSlack(webhookURL, message):
 def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
-def findWildcardDomains(jsonFilePath):
+def runSubfinder(programName, domainBase, outputFolder):
+    subfinderArguments = '-d ' + domainBase + ' -o ' + outputFolder + domainBase + '.json -oJ -t 100 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8, 2.2.2.2' 
+    #print(subfinderArguments)
+    subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+
+def findProbableWildcardDomains(jsonFilePath):
     with open(jsonFilePath) as subOut:
         probableWildcardDomains = set([]) 
         data = subOut.read()
@@ -106,14 +111,12 @@ with open('programs.json') as programsFile:
                         print("Done running Amass")
 
                     #run subfinder
-                    subfinderOutputFolder = './output/' + programName + '/subfinder/'
-                    if not os.path.exists(subfinderOutputFolder):
-                        os.makedirs(subfinderOutputFolder)
-                    subfinderArguments = '-d ' + domainBase + ' -o ./output/' + programName + '/subfinder/' + domainBase + '.json -oJ -t 100 -v -b -w ./wordlists/subdomains/jhaddix_all.txt -r 1.1.1.1, 8.8.8.8, 2.2.2.2' 
-                    #print(subfinderArguments)
                     if args.nodomainrecon == None:
+                        subfinderOutputFolder = './output/' + programName + '/subfinder/'
+                        if not os.path.exists(subfinderOutputFolder):
+                            os.makedirs(subfinderOutputFolder)
                         print("Starting Subfinder")
-                        subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
+                        runSubfinder(programName, domainBase, subfinderOutputFolder)
                         print("Done running Subfinder")
 
                     #Processing unique names
@@ -131,9 +134,7 @@ with open('programs.json') as programsFile:
                     for filename in os.listdir(subfinderOutputFolder):
                         if filename.endswith('.json'):
                             subfinderOutputFile = subfinderOutputFolder + '/' + filename
-                            wildcardDomains = findWildcardDomains(subfinderOutputFile)
-                            for wildcardDomain in wildcardDomains:
-                                uniqueDomains.add(wildcardDomain)
+                            wildcardDomains = findProbableWildcardDomains(subfinderOutputFile)
                             with open(subfinderOutputFile) as subfinderOut:
                                 output = json.load(subfinderOut)
                                 for domain in output:    
@@ -142,7 +143,7 @@ with open('programs.json') as programsFile:
                                         sanitizedDomain = domain.lstrip('.')
                                         for wildcardDomain in wildcardDomains:
                                             wildcardDomainSubdomain = "." + wildcardDomain
-                                            if wildcardDomainSubdomain in sanitizedDomain or wildcardDomain == sanitizedDomain :
+                                            if wildcardDomainSubdomain in sanitizedDomain:
                                                 addDomain = False
                                                 break
                                     except (KeyboardInterrupt, SystemExit):
