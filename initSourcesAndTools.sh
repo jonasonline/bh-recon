@@ -53,8 +53,11 @@ git clone https://github.com/robertdavidgraham/masscan
 cd masscan
 make
 cd ..
-git clone https://github.com/FortyNorthSecurity/EyeWitness.git
+#Bug in current build. Using fork as work around
+#git clone https://github.com/FortyNorthSecurity/EyeWitness.git
+git clone --branch VerifyDockerfilePatch https://github.com/jonasonline/EyeWitness.git
 cd ..
+docker build --build-arg user=$USER --tag eyewitness lib/EyeWitness
 
 sudo chown root:root digAndMasscan.sh
 sudo chmod 700 digAndMasscan.sh

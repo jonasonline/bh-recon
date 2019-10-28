@@ -11,6 +11,7 @@ parser.add_argument('--nohttp', action='store_const', const=True, help="Skip htt
 parser.add_argument('--nomassdns', action='store_const', const=True, help="Skip massdns discovery")
 parser.add_argument('--nowayback', action='store_const', const=True, help="Skip Wayback machine discovery")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
+parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip scrren capture with EyeWitness")
 
 args = parser.parse_args()
 
@@ -70,7 +71,7 @@ with open('programs.json') as programsFile:
         firstRun = True
         uniqueDomains = set([])
         programName = program['programName']
-        outputFolder = './output/' + programName 
+        outputFolder = './output/' + programName + ''
         amassFolder = './output/' + programName + '/amass'
         subfinderFolder = './output/' + programName + '/subfinder'
         masscanFolder = './output/' + programName + '/masscan'
@@ -321,6 +322,10 @@ with open('programs.json') as programsFile:
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
+        if args.noeyewitness == None:
+            scriptArguments = programName
+            subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+
 
                     
 
