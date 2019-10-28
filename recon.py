@@ -111,8 +111,8 @@ with open('programs.json') as programsFile:
                         print("Done running Amass")
 
                     #run subfinder
+                    subfinderOutputFolder = './output/' + programName + '/subfinder/'
                     if args.nodomainrecon == None:
-                        subfinderOutputFolder = './output/' + programName + '/subfinder/'
                         if not os.path.exists(subfinderOutputFolder):
                             os.makedirs(subfinderOutputFolder)
                         print("Starting Subfinder")
@@ -233,21 +233,34 @@ with open('programs.json') as programsFile:
                     subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
         #BannerGrabbing
-        """ if args.nobanner == None:
+        if args.nobanner == None:
             scannedDomains = set([])
             if os.path.isdir(masscanFolder):
                 for filename in os.listdir(masscanFolder):
                     currentDomain = filename.split("@")[0]
                     if currentDomain not in scannedDomains:
                         print(currentDomain)
-                        with open(filename, 'r') as masscanOutFile:
-                            masscanOut = json.load(masscanOutFile)
-                            print(masscanOut)
-                            print('Not implemented')
-                            scriptArguments = 
-                            subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                            scannedDomains.add(currentDomain) """
-
+                        print(filename)
+                        fullFilePath = masscanFolder + "/" + filename 
+                        with open(fullFilePath, 'r') as masscanOutFile:
+                            masscanOutFile.seek(0)
+                            raw_data = masscanOutFile.read()
+                            #masscanOut = json.load(masscanOutFile)
+                            #Temporary work around for bug in masscan generating invalid json
+                            masscanOut = json.loads("".join(raw_data.split()).rstrip(",]") + str("]"))
+                            for target in masscanOut:
+                                if 'ip' in target:
+                                    ipAddress = target['ip']
+                                    ports = target['ports']
+                                    for port in ports:
+                                        if 'port' in port:
+                                            #Skipping known web ports
+                                            if port['port'] in [80, 443]:
+                                                continue
+                                            scriptArguments = str(port['port']) + " " + currentDomain + " " +  " " + currentDomain + " " + programName
+                                            #print(scriptArguments)
+                                            subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+                                            scannedDomains.add(currentDomain)
         #Content discovery
         with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
             domains.seek(0)
@@ -309,7 +322,6 @@ with open('programs.json') as programsFile:
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
 
-        #Running way
                     
 
 
