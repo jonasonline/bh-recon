@@ -59,11 +59,18 @@ git clone --branch VerifyDockerfilePatch https://github.com/jonasonline/EyeWitne
 cd ..
 docker build --build-arg user=$USER --tag eyewitness lib/EyeWitness
 
-sudo chown root:root digAndMasscan.sh
-sudo chmod 700 digAndMasscan.sh
-sudo chmod +x digAndMasscan.sh
-INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "digAndMasscan.sh")
-[[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/digAndMasscan.sh"
+# sudo chown root:root digAndMasscan.sh
+# sudo chmod 700 digAndMasscan.sh
+# sudo chmod +x digAndMasscan.sh
+# INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "digAndMasscan.sh")
+# [[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/digAndMasscan.sh"
+
+sudo chown root:root masscan.sh
+sudo chmod 700 masscan.sh
+sudo chmod +x masscan.sh
+INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "masscan.sh")
+[[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/masscan.sh"
+
 
 sudo chown root:root nmapBannerGrab.sh
 sudo chmod 700 nmapBannerGrab.sh

@@ -1,0 +1,1 @@
+masscan $1 -p1-65535 --rate 10000 -oJ output/$2/masscan/$3@$1.json

@@ -185,23 +185,10 @@ with open('programs.json') as programsFile:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
 
-        #find live domains
-        print("Finding live domains")
-        if args.nomassdns == None:
-            massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOutLive.json"
-            subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
-
         #TODO Process massdns output
         #TODO Implement dnsgen
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
 
-        #find URLs from wayback machine
-        if args.nowayback == None:
-            print("Starting Wayback Machine discovery")
-            subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
-            #cleaning output
-            subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
-            print("Done running Wayback Machine discovery")
 
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
@@ -223,18 +210,32 @@ with open('programs.json') as programsFile:
                     incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
             with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
                 json.dump(incrementalContentDomains, contentDomains, default = myconverter)
+        #Find live domains
+        print("Finding live domains")
+        if args.nomassdns == None:
+            massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOutLive.json"
+            subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
-        #port scan domains
-        if args.noportscan == None:
-            print("Starting port scan")
-            with open('./output/' + programName + '/incrementalDomains.txt', 'r') as domains:
-                domains.seek(0)
-                for domain in domains:
-                    scriptArguments = domain.rstrip() + ' ' + programName
-                    subprocess.run('sudo ./digAndMasscan.sh ' + scriptArguments, shell=True)
-            print("Done running port scan")
-        #BannerGrabbing
-        if args.nobanner == None:
+            #Port scan domains. Not done if no massdns
+            if args.noportscan == None:
+                print("Starting port scan")
+                scannedDomains = set([])
+                with open('./output/' + programName + '/massDnsOutLive.json', 'r') as dnsRecords:
+                    dnsRecords.seek(0)
+                    for dnsRecordRow in dnsRecords:
+                        dnsRecord = json.loads(dnsRecordRow)
+                        if 'resp_type' in dnsRecord:
+                            if dnsRecord['resp_type'] == 'A':
+                                dnsName = dnsRecord['query_name'].rstrip('.')
+                                dnsData = dnsRecord['data'] 
+                                scriptArguments = dnsData + ' ' + programName + ' ' + dnsName
+                                if dnsName not in scannedDomains:
+                                    print(scriptArguments)
+                                    subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
+                                    scannedDomains.add(dnsName)
+                print("Done running port scan")
+            #BannerGrabbing
+            if args.nobanner == None:
             scannedDomains = set([])
             if os.path.isdir(masscanFolder):
                 for filename in os.listdir(masscanFolder):
@@ -262,6 +263,13 @@ with open('programs.json') as programsFile:
                                             #print(scriptArguments)
                                             subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
                                             scannedDomains.add(currentDomain)
+        #Find URLs from wayback machine
+        if args.nowayback == None:
+            print("Starting Wayback Machine discovery")
+            subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+            #cleaning output
+            subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
+            print("Done running Wayback Machine discovery")
         #Content discovery
         with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
             domains.seek(0)
