@@ -236,33 +236,33 @@ with open('programs.json') as programsFile:
                 print("Done running port scan")
             #BannerGrabbing
             if args.nobanner == None:
-            scannedDomains = set([])
-            if os.path.isdir(masscanFolder):
-                for filename in os.listdir(masscanFolder):
-                    currentDomain = filename.split("@")[0]
-                    if currentDomain not in scannedDomains:
-                        print(currentDomain)
-                        print(filename)
-                        fullFilePath = masscanFolder + "/" + filename 
-                        with open(fullFilePath, 'r') as masscanOutFile:
-                            masscanOutFile.seek(0)
-                            raw_data = masscanOutFile.read()
-                            #masscanOut = json.load(masscanOutFile)
-                            #Temporary work around for bug in masscan generating invalid json
-                            masscanOut = json.loads("".join(raw_data.split()).rstrip(",]") + str("]"))
-                            for target in masscanOut:
-                                if 'ip' in target:
-                                    ipAddress = target['ip']
-                                    ports = target['ports']
-                                    for port in ports:
-                                        if 'port' in port:
-                                            #Skipping known web ports
-                                            if port['port'] in [80, 443]:
-                                                continue
-                                            scriptArguments = str(port['port']) + " " + currentDomain + " " +  " " + currentDomain + " " + programName
-                                            #print(scriptArguments)
-                                            subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                                            scannedDomains.add(currentDomain)
+                scannedDomains = set([])
+                if os.path.isdir(masscanFolder):
+                    for filename in os.listdir(masscanFolder):
+                        currentDomain = filename.split("@")[0]
+                        if currentDomain not in scannedDomains:
+                            print(currentDomain)
+                            print(filename)
+                            fullFilePath = masscanFolder + "/" + filename 
+                            with open(fullFilePath, 'r') as masscanOutFile:
+                                masscanOutFile.seek(0)
+                                raw_data = masscanOutFile.read()
+                                #masscanOut = json.load(masscanOutFile)
+                                #Temporary work around for bug in masscan generating invalid json
+                                masscanOut = json.loads("".join(raw_data.split()).rstrip(",]") + str("]"))
+                                for target in masscanOut:
+                                    if 'ip' in target:
+                                        ipAddress = target['ip']
+                                        ports = target['ports']
+                                        for port in ports:
+                                            if 'port' in port:
+                                                #Skipping known web ports
+                                                if port['port'] in [80, 443]:
+                                                    continue
+                                                scriptArguments = str(port['port']) + " " + currentDomain + " " +  " " + currentDomain + " " + programName
+                                                #print(scriptArguments)
+                                                subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+                                                scannedDomains.add(currentDomain)
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
