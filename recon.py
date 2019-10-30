@@ -75,6 +75,7 @@ with open('programs.json') as programsFile:
         amassFolder = './output/' + programName + '/amass'
         subfinderFolder = './output/' + programName + '/subfinder'
         masscanFolder = './output/' + programName + '/masscan'
+        masscanIpListFile = masscanFolder + '/ipList.txt'
         digFolder = './output/' + programName + '/dig'
         gobusterFolder = './output/' + programName + '/gobuster'
         nmapFolder = './output/' + programName + '/nmap'
@@ -213,29 +214,35 @@ with open('programs.json') as programsFile:
         #Find live domains
         print("Finding live domains")
         if args.nomassdns == None:
-            massdnsArguments = " -r lib/massdns/lists/resolvers.txt -o J output/" + programName + "/incrementalDomains.txt -w output/" + programName + "/massDnsOutLive.json"
+            massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOutLive.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
             #Port scan domains. Not done if no massdns
             if args.noportscan == None:
                 print("Starting port scan")
                 scannedDomains = set([])
+                ipList = set([])
                 with open('./output/' + programName + '/massDnsOutLive.json', 'r') as dnsRecords:
                     dnsRecords.seek(0)
                     for dnsRecordRow in dnsRecords:
                         dnsRecord = json.loads(dnsRecordRow)
                         if 'resp_type' in dnsRecord:
-                            if dnsRecord['resp_type'] == 'A':
+                            if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
                                 dnsName = dnsRecord['query_name'].rstrip('.')
                                 dnsData = dnsRecord['data'] 
-                                scriptArguments = dnsData + ' ' + programName + ' ' + dnsName
                                 if dnsName not in scannedDomains:
-                                    print(scriptArguments)
-                                    subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
                                     scannedDomains.add(dnsName)
+                                    ipList.add(dnsData)
+                with open(masscanIpListFile, 'w+') as masscanIPList:
+                    for ipAddress in ipList:
+                        masscanIPList.write("{}\n".format(ipAddress))
+                #Running Masscan        
+                scriptArguments = masscanIpListFile + ' ' + programName
+                subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
                 print("Done running port scan")
-            #BannerGrabbing
-            if args.nobanner == None:
+
+            """ #BannerGrabbing
+            if args.nobanner == None: """
                 scannedDomains = set([])
                 if os.path.isdir(masscanFolder):
                     for filename in os.listdir(masscanFolder):

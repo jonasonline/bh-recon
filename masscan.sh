@@ -1,1 +1,1 @@
-masscan $1 -p1-65535 --rate 10000 --wait 0 -oJ output/$2/masscan/$3@$1.json
+masscan $1 -c masscan.conf --wait 0 -oJ output/$2/masscan/$2.masscanOut.json
