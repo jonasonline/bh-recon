@@ -122,7 +122,7 @@ with open('programs.json') as programsFile:
                         print("Done running Subfinder")
 
                     #Processing unique names
-                    print("Processing domain names")
+                    print("Processing domain names for: " + domainBase)
                     #Amass unique names
                     for filename in os.listdir(amassDomainFolder):
                         if filename.endswith('.json') and not filename.endswith('_data.json'):
@@ -187,7 +187,7 @@ with open('programs.json') as programsFile:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
         print("Done processing domain names")
-        
+
         #TODO Process massdns output
         #TODO Implement dnsgen
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
