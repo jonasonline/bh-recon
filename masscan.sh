@@ -1,1 +1,1 @@
-masscan $1 -c masscan.conf --wait 0 -oJ output/$2/masscan/$2.masscanOut.json
+masscan -iL $1 -c masscan.conf --wait 0 -oJ output/$2/masscan/$2.masscanOut.json
