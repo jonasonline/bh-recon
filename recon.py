@@ -242,7 +242,7 @@ with open('programs.json') as programsFile:
                 print("Done running port scan")
 
             """ #BannerGrabbing
-            if args.nobanner == None: """
+            if args.nobanner == None:
                 scannedDomains = set([])
                 if os.path.isdir(masscanFolder):
                     for filename in os.listdir(masscanFolder):
@@ -270,6 +270,7 @@ with open('programs.json') as programsFile:
                                                 #print(scriptArguments)
                                                 subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
                                                 scannedDomains.add(currentDomain)
+        """
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
