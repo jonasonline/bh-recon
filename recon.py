@@ -243,36 +243,56 @@ with open('programs.json') as programsFile:
                 subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
                 print("Done running port scan")
 
-            """ #BannerGrabbing
-            if args.nobanner == None:
-                scannedDomains = set([])
+                #Summarizing findings
+                domainsAndPorts = {}
+                domainsAndPortsFiltered = {} 
                 if os.path.isdir(masscanFolder):
-                    for filename in os.listdir(masscanFolder):
-                        currentDomain = filename.split("@")[0]
-                        if currentDomain not in scannedDomains:
-                            print(currentDomain)
-                            print(filename)
-                            fullFilePath = masscanFolder + "/" + filename 
-                            with open(fullFilePath, 'r') as masscanOutFile:
-                                masscanOutFile.seek(0)
-                                raw_data = masscanOutFile.read()
-                                #masscanOut = json.load(masscanOutFile)
-                                #Temporary work around for bug in masscan generating invalid json
-                                masscanOut = json.loads("".join(raw_data.split()).rstrip(",]") + str("]"))
-                                for target in masscanOut:
-                                    if 'ip' in target:
-                                        ipAddress = target['ip']
-                                        ports = target['ports']
-                                        for port in ports:
-                                            if 'port' in port:
-                                                #Skipping known web ports
-                                                if port['port'] in [80, 443]:
-                                                    continue
-                                                scriptArguments = str(port['port']) + " " + currentDomain + " " +  " " + currentDomain + " " + programName
-                                                #print(scriptArguments)
-                                                subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                                                scannedDomains.add(currentDomain)
-        """
+                    with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOutLive.json', 'r') as dnsRecordsFile :
+                        masscanOutFile.seek(0)
+                        for row in masscanOutFile:
+                            if 'ip' in row:
+                                record = json.loads(row.rstrip(',\n'))
+                                ipAddress = record['ip'] 
+                                dnsRecordsFile.seek(0)
+                                for dnsRecordRow in dnsRecordsFile:
+                                    dnsRecord = json.loads(dnsRecordRow)
+                                    if 'resp_type' in dnsRecord:
+                                        if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
+                                            dnsName = dnsRecord['query_name'].rstrip('.')
+                                            dnsIp = dnsRecord['data'] 
+                                            if ipAddress == dnsIp:
+                                                if dnsRecord['resp_name'] in domainsAndPorts:
+                                                    domainsAndPorts[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
+                                                else:    
+                                                    domainsAndPorts[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
+                                                for port in record['ports']:
+                                                    if port['port'] not in [80, 443]:
+                                                        if dnsRecord['resp_name'] in domainsAndPortsFiltered:
+                                                            domainsAndPortsFiltered[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
+                                                            break
+                                                        else:    
+                                                            domainsAndPortsFiltered[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
+                                                            break
+                                dnsRecordsFile.seek(0)
+                    with open('./output/' + programName + '/domainsAndPorts.json', 'w+') as f:
+                            json.dump(domainsAndPorts, f)
+                    with open('./output/' + programName + '/domainsAndPortsFiltered.json', 'w+') as f:
+                            json.dump(domainsAndPortsFiltered, f)
+            if args.nobanner == None:
+                #Banner Grabbing
+                print('Starting banner grabbing')
+                filteredDomainsFilePath = './output/' + programName + '/domainsAndPortsFiltered.json'
+                if os.path.exists(filteredDomainsFilePath): 
+                    with open(filteredDomainsFilePath, 'r+') as filteredDomainsFile:
+                        filteredDomainsFile.seek(0)
+                        filteredDomains = json.load(filteredDomainsFile)
+                        for filteredDomain in filteredDomains:
+                            for ipAdresses in filteredDomains[filteredDomain]['ipAdresses']:
+                                for ipAdress in ipAdresses:
+                                    scriptArguments = str(ipAdresses[ipAdress][0]['port']) + " " + filteredDomain.rstrip('.') + " " + programName
+                                    print(scriptArguments)
+                                    subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+                print('Done banner grabbing')       
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
