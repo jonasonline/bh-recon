@@ -363,15 +363,3 @@ with open('programs.json') as programsFile:
         if args.noeyewitness == None:
             scriptArguments = programName
             subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
-
-
-                    
-
-
-
-                    
-                    
-                        
-
-
-                
