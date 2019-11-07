@@ -301,16 +301,17 @@ with open('programs.json') as programsFile:
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
             print("Done running Wayback Machine discovery")
         #Content discovery
-        with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
-            domains.seek(0)
-            contentDomains = json.load(domains)
-            print("Starting content discovery with ffuf")
-            for domain in contentDomains:
-                if args.nohttp == None and args.nocontent == None:
-                    urlHttp = "http://" + domain
-                    #TODO
-                    #subprocess.run('ffuf ' + scriptArguments, shell=True)
-                if args.nocontent == None:
+        if args.nocontent == None:
+            with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
+                domains.seek(0)
+                contentDomains = json.load(domains)
+                print("Starting content discovery with ffuf")
+                for domain in contentDomains:
+                    if args.nohttp == None and args.nocontent == None:
+                        urlHttp = "http://" + domain
+                        #TODO
+                        #subprocess.run('ffuf ' + scriptArguments, shell=True)
+                    
                     if 'Status' in contentDomains[domain]:
                         if contentDomains[domain]['Status'] == 'Enabled':
                             urlHttps = "https://" + domain
@@ -356,7 +357,7 @@ with open('programs.json') as programsFile:
                                     postToSlack(config["slackWebhookURL"], message)
                             except:
                                 pass
-            print("Done running ffuf")
+                print("Done running ffuf")
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
