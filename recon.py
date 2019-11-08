@@ -57,6 +57,16 @@ def findProbableWildcardDomains(jsonFilePath):
                 print('Error')
         return probableWildcardDomains
 
+def addContentDomain(inputURLTextFileName):
+    with open('./output/' + programName + '/' + inputURLTextFileName, 'r') as inputFile:
+            inc.seek(0)
+            incDomains = set(line.strip() for line in inputFile)
+            for domain in incDomains:
+                if domain not in incrementalContentDomains:
+                    incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
+            with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
+                json.dump(incrementalContentDomains, contentDomains, default = myconverter)
+
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
 
@@ -70,6 +80,7 @@ with open('programs.json') as programsFile:
         
         firstRun = True
         uniqueDomains = set([])
+        uniqueURLs = set([])
         programName = program['programName']
         outputFolder = './output/' + programName + ''
         amassFolder = './output/' + programName + '/amass'
@@ -93,7 +104,8 @@ with open('programs.json') as programsFile:
         for target in program['scope']:
             if target['inScope'] == True:
                 if 'url' in target:
-                    print(target['url'] + ': No URL Processing implemented.')
+                    print(target['url'])
+                    uniqueURLs.add(target['url'])
                 elif 'domain' in target:
                     domainBase = target['domain'].replace('*.','')
                     
@@ -186,6 +198,12 @@ with open('programs.json') as programsFile:
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
                         inc.write("%s\n" % domain)
+        with open('./output/' + programName + '/URLs.txt', 'w+') as urls:
+                urls.seek(0)
+                for url in uniqueURLs:
+                    print('Adding url ' + url + ' to url list for ' + programName)
+                    urls.write("%s\n" % url)
+                        
         print("Done processing domain names")
 
         #TODO Process massdns output
@@ -205,14 +223,16 @@ with open('programs.json') as programsFile:
                 incrementalContentDomains = json.load(contentDomains)
             else:
                 incrementalContentDomains = {}
-        with open('./output/' + programName + '/incrementalDomains.txt', 'r') as inc:
+        addContentDomain('incrementalDomains.txt')
+        addContentDomain('URLs.txt')
+        """ with open('./output/' + programName + '/incrementalDomains.txt', 'r') as inc:
             inc.seek(0)
             incDomains = set(line.strip() for line in inc)
             for domain in incDomains:
                 if domain not in incrementalContentDomains:
                     incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
             with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
-                json.dump(incrementalContentDomains, contentDomains, default = myconverter)
+                json.dump(incrementalContentDomains, contentDomains, default = myconverter) """
         #Find live domains
         print("Finding live domains")
         if args.nomassdns == None:
@@ -296,7 +316,9 @@ with open('programs.json') as programsFile:
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
+
             subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+            subprocess.run('cat output/' + programName + '/URLs.txt | waybackurls >> output/' + programName + '/waybackurlsOut.txt', shell=True)
             #cleaning output
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
             print("Done running Wayback Machine discovery")
