@@ -59,7 +59,7 @@ def findProbableWildcardDomains(jsonFilePath):
 
 def addContentDomain(inputURLTextFileName):
     with open('./output/' + programName + '/' + inputURLTextFileName, 'r') as inputFile:
-            inc.seek(0)
+            inputFile.seek(0)
             incDomains = set(line.strip() for line in inputFile)
             for domain in incDomains:
                 if domain not in incrementalContentDomains:
