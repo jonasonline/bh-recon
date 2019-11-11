@@ -92,6 +92,9 @@ with open('programs.json') as programsFile:
         nmapFolder = './output/' + programName + '/nmap'
         ffufFolder = './output/' + programName + '/ffuf'
         eyewitnessFolder = './output/' + programName + '/eyewitness'
+        incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
+        incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
+        liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -191,7 +194,7 @@ with open('programs.json') as programsFile:
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
             currentData = json.load(current)
             currentDataSet = set(currentData)
-            with open('./output/' + programName + '/incrementalDomains.txt', 'a+') as inc:
+            with open(incrementalDomainsFile, 'a+') as inc:
                 inc.seek(0)
                 incDomains = set(line.strip() for line in inc)
                 for domain in currentDataSet:
@@ -225,16 +228,14 @@ with open('programs.json') as programsFile:
                 incrementalContentDomains = {}
         addContentDomain('incrementalDomains.txt')
         addContentDomain('URLs.txt')
-        """ with open('./output/' + programName + '/incrementalDomains.txt', 'r') as inc:
-            inc.seek(0)
-            incDomains = set(line.strip() for line in inc)
-            for domain in incDomains:
-                if domain not in incrementalContentDomains:
-                    incrementalContentDomains[domain] = {"Added": datetime.datetime.now(), "Status": "Pending"}
-            with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
-                json.dump(incrementalContentDomains, contentDomains, default = myconverter) """
+        
         #Find live domains
         print("Finding live domains")
+        if args.nohttprobe == None:
+            scriptArguments = masscanIpListFile + ' ' + programName
+            subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
+            print("Done running httprobe")
+
         if args.nomassdns == None:
             massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOutLive.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
@@ -383,6 +384,9 @@ with open('programs.json') as programsFile:
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
+        if args.definedContentOnly == None:
+            subprocess.run('cat ' + liveHttpDomainsFile + ' >> ' + incrementalContentFile, shell=True)
+
         if args.noeyewitness == None:
             scriptArguments = programName
             subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
