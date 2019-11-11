@@ -29,6 +29,7 @@ sudo snap install amass
 go get github.com/subfinder/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
+go get -u github.com/tomnomnom/httprobe
 sudo apt-get masscan -y
 pip3 install dnsgen
 PATH="$HOME/bin:$HOME/.local/bin:$PATH"
