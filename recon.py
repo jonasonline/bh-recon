@@ -10,6 +10,7 @@ parser.add_argument('--noslack', action='store_const', const=True, help="Skip po
 parser.add_argument('--nohttp', action='store_const', const=True, help="Skip http discovery")
 parser.add_argument('--nomassdns', action='store_const', const=True, help="Skip massdns discovery")
 parser.add_argument('--nowayback', action='store_const', const=True, help="Skip Wayback machine discovery")
+parser.add_argument('--nohttprobe', action='store_const', const=True, help="Skip probing for live sites")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
 parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip scrren capture with EyeWitness")
 
