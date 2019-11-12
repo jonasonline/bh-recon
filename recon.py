@@ -12,6 +12,7 @@ parser.add_argument('--nomassdns', action='store_const', const=True, help="Skip 
 parser.add_argument('--nowayback', action='store_const', const=True, help="Skip Wayback machine discovery")
 parser.add_argument('--nohttprobe', action='store_const', const=True, help="Skip probing for live sites")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
+parser.add_argument('--definedcontentonly', action='store_const', const=True, help="Skip content discovery")
 parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip scrren capture with EyeWitness")
 
 args = parser.parse_args()
@@ -385,7 +386,7 @@ with open('programs.json') as programsFile:
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
-        if args.definedContentOnly == None:
+        if args.definedcontentonly == None:
             subprocess.run('cat ' + liveHttpDomainsFile + ' >> ' + incrementalContentFile, shell=True)
 
         if args.noeyewitness == None:
