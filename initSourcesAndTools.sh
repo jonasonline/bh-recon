@@ -30,6 +30,7 @@ go get github.com/subfinder/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
 go get -u github.com/tomnomnom/httprobe
+go get github.com/haccer/subjack
 sudo apt-get masscan -y
 pip3 install dnsgen
 PATH="$HOME/bin:$HOME/.local/bin:$PATH"
@@ -81,10 +82,3 @@ INFILE=$(sudo cat /etc/sudoers | grep "$USER" | grep "nmapBannerGrab.sh")
 [[ ! -z "$INFILE" ]] && echo "$USER already in sudoers" || echo "Add the following to sudoers via visudo: $USER  ALL=(ALL) NOPASSWD: $PWD/nmapBannerGrab.sh"
 
 pip3 install -r requirements.txt
-
-# Domained tool install disabled. Buggy 
-# sudo apt-get install libldns-dev -y
-# git clone https://github.com/TypeError/domained.git
-# cd domained
-# sudo pip install -r ./ext/requirements.txt
-# sudo python domained.py --install

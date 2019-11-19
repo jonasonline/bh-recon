@@ -12,7 +12,7 @@ parser.add_argument('--nomassdns', action='store_const', const=True, help="Skip 
 parser.add_argument('--nowayback', action='store_const', const=True, help="Skip Wayback machine discovery")
 parser.add_argument('--nohttprobe', action='store_const', const=True, help="Skip probing for live sites")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
-parser.add_argument('--definedcontentonly', action='store_const', const=True, help="Skip content discovery")
+parser.add_argument('--nosubdomaintakeover', action='store_const', const=True, help="Skip subdomain takeover check")
 parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip screen capture with EyeWitness")
 parser.add_argument('--nocontentscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
 parser.add_argument('--nodomainrootscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
@@ -94,6 +94,7 @@ with open('programs.json') as programsFile:
         digFolder = './output/' + programName + '/dig'
         gobusterFolder = './output/' + programName + '/gobuster'
         nmapFolder = './output/' + programName + '/nmap'
+        subdomainTakeoverFolder = './output/' + programName + '/subdomainTakeover'
         ffufFolder = './output/' + programName + '/ffuf'
         eyewitnessFolder = './output/' + programName + '/eyewitness'
         contentScreenShotsFilder = eyewitnessFolder + '/content'
@@ -107,6 +108,7 @@ with open('programs.json') as programsFile:
         os.makedirs(digFolder, exist_ok=True, )
         os.makedirs(gobusterFolder, exist_ok=True, )
         os.makedirs(nmapFolder, exist_ok=True, )
+        os.makedirs(subdomainTakeoverFolder, exist_ok=True, )
         os.makedirs(ffufFolder, exist_ok=True, )
         os.makedirs(eyewitnessFolder, exist_ok=True, )
         os.makedirs(contentScreenShotsFilder, exist_ok=True, )
@@ -332,7 +334,10 @@ with open('programs.json') as programsFile:
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
             print("Done running Wayback Machine discovery")
 
-        
+        #Checking subdomain takeover
+        if args.nosubdomaintakeover == None:
+            scriptArguments = '-w ' + incrementalDomainsFile + ' -t 100 -timeout 30 -ssl -v 3 -o ' + subdomainTakeoverFolder + '/takeoverOutput.txt'
+            subprocess.run('subjack ' + scriptArguments, shell=True)            
 
         #Content discovery
         if args.nocontent == None:
