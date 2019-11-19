@@ -335,9 +335,11 @@ with open('programs.json') as programsFile:
             print("Done running Wayback Machine discovery")
 
         #Checking subdomain takeover
+        print('Starting subdomain takeover check')
         if args.nosubdomaintakeover == None:
             scriptArguments = '-w ' + incrementalDomainsFile + ' -c lib/subjack/fingerprints.json -t 100 -timeout 30 -ssl -o ' + subdomainTakeoverFolder + '/takeoverOutput.txt'
             subprocess.run('subjack ' + scriptArguments, shell=True)            
+        print('Done running subdomain takeover check')
 
         #Content discovery
         if args.nocontent == None:
