@@ -336,7 +336,7 @@ with open('programs.json') as programsFile:
 
         #Checking subdomain takeover
         if args.nosubdomaintakeover == None:
-            scriptArguments = '-w ' + incrementalDomainsFile + ' -t 100 -timeout 30 -ssl -v 3 -o ' + subdomainTakeoverFolder + '/takeoverOutput.txt'
+            scriptArguments = '-w ' + incrementalDomainsFile + ' -c lib/subjack/fingerprints.json -t 100 -timeout 30 -ssl -o ' + subdomainTakeoverFolder + '/takeoverOutput.txt'
             subprocess.run('subjack ' + scriptArguments, shell=True)            
 
         #Content discovery

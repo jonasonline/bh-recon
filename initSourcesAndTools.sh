@@ -39,14 +39,10 @@ alias pip=pip3
 mkdir lib
 cd lib
 git clone https://github.com/danielmiessler/SecLists.git
-git clone https://github.com/sqlmapproject/sqlmap.git
-git clone https://github.com/epinna/tplmap
 git clone https://github.com/OJ/gobuster.git
-git clone https://github.com/maK-/parameth.git
-git clone https://github.com/nahamsec/JSParser.git
-git clone https://github.com/GerbenJavado/LinkFinder.git
 git clone https://github.com/commixproject/commix.git commix
 git clone https://github.com/vysecurity/DomLink.git
+git clone https://github.com/haccer/subjack.git
 git clone https://github.com/blechschmidt/massdns.git
 cd massdns
 make
