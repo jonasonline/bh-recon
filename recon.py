@@ -13,7 +13,9 @@ parser.add_argument('--nowayback', action='store_const', const=True, help="Skip 
 parser.add_argument('--nohttprobe', action='store_const', const=True, help="Skip probing for live sites")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
 parser.add_argument('--definedcontentonly', action='store_const', const=True, help="Skip content discovery")
-parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip scrren capture with EyeWitness")
+parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip screen capture with EyeWitness")
+parser.add_argument('--nocontentscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
+parser.add_argument('--nodomainrootscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
 
 args = parser.parse_args()
 
@@ -94,6 +96,8 @@ with open('programs.json') as programsFile:
         nmapFolder = './output/' + programName + '/nmap'
         ffufFolder = './output/' + programName + '/ffuf'
         eyewitnessFolder = './output/' + programName + '/eyewitness'
+        contentScreenShotsFilder = eyewitnessFolder + '/content'
+        domainRootScreenShotsFilder = eyewitnessFolder + '/domainRoot'
         incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
@@ -105,6 +109,8 @@ with open('programs.json') as programsFile:
         os.makedirs(nmapFolder, exist_ok=True, )
         os.makedirs(ffufFolder, exist_ok=True, )
         os.makedirs(eyewitnessFolder, exist_ok=True, )
+        os.makedirs(contentScreenShotsFilder, exist_ok=True, )
+        os.makedirs(domainRootScreenShotsFilder, exist_ok=True, )
                     
         for target in program['scope']:
             if target['inScope'] == True:
@@ -325,6 +331,9 @@ with open('programs.json') as programsFile:
             #cleaning output
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
             print("Done running Wayback Machine discovery")
+
+        
+
         #Content discovery
         if args.nocontent == None:
             with open('./output/' + programName + '/contentDomains.json', 'r') as domains:
@@ -386,9 +395,13 @@ with open('programs.json') as programsFile:
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
-        if args.definedcontentonly == None:
-            subprocess.run('cat ' + liveHttpDomainsFile + ' >> ' + incrementalContentFile, shell=True)
 
+        #Capturing screenshots
         if args.noeyewitness == None:
-            scriptArguments = programName
-            subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+            #TODO input program name ($1), input file name ($2), output directory name ($3)
+            if args.nocontentscreenshots == None:
+                scriptArguments = programName + ' ' + incrementalContentFile + ' content' 
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+            if args.nodomainrootscreenshots == None:
+                scriptArguments = programName + ' ' + liveHttpDomainsFile + ' domainRoot' 
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
