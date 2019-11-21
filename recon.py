@@ -409,8 +409,8 @@ with open('programs.json') as programsFile:
             if args.nocontentscreenshots == None:
                 scriptArguments = programName + ' incrementalContent.txt content' 
                 print(scriptArguments)
-                #subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
                 print(scriptArguments)
                 scriptArguments = programName + ' liveHttpDomains.txt domainRoot' 
-                #subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
