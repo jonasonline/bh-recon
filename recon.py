@@ -71,6 +71,73 @@ def addContentDomain(inputURLTextFileName):
             with open('./output/' + programName + '/contentDomains.json', 'w') as contentDomains:
                 json.dump(incrementalContentDomains, contentDomains, default = myconverter)
 
+def probeURL(url):
+    status = {}
+    status['url'] = url
+    try:
+        response = requests.get(url, timeout=2)
+    except requests.exceptions.SSLError as e:
+        status['SSLError'] = str(e)
+        try:
+            response = requests.get(url, verify=False, timeout=2)
+        except requests.exceptions.RequestException as e:
+                print(e)
+                return status
+    except requests.exceptions.ConnectTimeout:
+        status['timedOut'] = 1
+        return status
+
+    except requests.exceptions.RequestException as e:
+        status['connectionError'] = 1
+        return status
+    status['statusCode'] = response.status_code
+    status['text'] = response.text
+    status['history'] = str(response.history)
+    status['headers'] = str(response.headers)
+    if 'content-length' in response.headers:
+        status['contentLength'] = response.headers['content-length']
+    if 'ETag' in response.headers:
+        status['ETag'] = str(response.headers['ETag'])
+
+    return status
+
+def statusForUrls(urlsTextFile, outputFile):
+    statusForUrls = {}
+    if not os.path.exists(outputFile):
+                with open(outputFile, 'w+'):
+                    print('Created file: ' + outputFile)
+
+    with open(outputFile, 'r') as read_file:
+        read_file.seek(0)
+        if read_file.read(1):
+            read_file.seek(0)
+            statusForUrls = json.load(read_file)
+
+    with open(urlsTextFile, 'r') as urlList:
+        urls = urlList.readlines()
+        for url in urls:
+            strippedUrl = url.strip()
+            status = probeURL(strippedUrl)
+            if 'statusCode' in status and 'statusCode' in statusForUrls[strippedUrl]:
+                if statusForUrls[strippedUrl]['statusCode'] != status['statusCode']:
+                    if args.noslack == None:
+                        message = 'Status code changed from ' + str(statusForUrls[strippedUrl]['statusCode']) + ' to ' + str(status['statusCode']) + ' for: ' + statusForUrls[strippedUrl]['url']
+                        print(message)
+                        postToSlack(config["slackWebhookURL"], message)
+            if 'ETag' in status and 'ETag' in statusForUrls[strippedUrl]:
+                if statusForUrls[strippedUrl]['ETag'] != status['ETag']:
+                    print('ETag changed from ' + str(statusForUrls[strippedUrl]['ETag']) + ' to ' + str(status['ETag']) + ' for: ' + statusForUrls[strippedUrl]['url'])
+            if 'contentLength' in status and 'contentLength' in statusForUrls[strippedUrl]:
+                if statusForUrls[strippedUrl]['contentLength'] != status['contentLength']:
+                    if args.noslack == None:
+                        message = 'Content length changed from ' + str(statusForUrls[strippedUrl]['contentLength']) + ' to ' + str(status['contentLength']) + ' for: ' + statusForUrls[strippedUrl]['url']
+                        print(message)
+                        postToSlack(config["slackWebhookURL"], message)
+            
+            statusForUrls[status['url']] = status
+        with open(outputFile, 'w') as outFile:
+            outFile.write(json.dumps(statusForUrls, indent=4))
+
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
 
@@ -101,7 +168,9 @@ with open('programs.json') as programsFile:
         domainRootScreenShotsFilder = eyewitnessFolder + '/domainRoot'
         incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
+        statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
+        statusForLiveHttpDomainsFile = './output/' + programName + '/statusForliveHttpDomains.txt'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -402,6 +471,10 @@ with open('programs.json') as programsFile:
         #Incrementing content
         scriptArguments = ffufFolder + ' ' + outputFolder
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
+
+        #Checking and logging status for URLs
+        statusForUrls(incrementalContentFile,statusForContentUrlsFile)
+        statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
 
         #Capturing screenshots
         if args.noeyewitness == None:
