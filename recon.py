@@ -164,8 +164,8 @@ with open('programs.json') as programsFile:
         subdomainTakeoverFolder = './output/' + programName + '/subdomainTakeover'
         ffufFolder = './output/' + programName + '/ffuf'
         eyewitnessFolder = './output/' + programName + '/eyewitness'
-        contentScreenShotsFilder = eyewitnessFolder + '/content'
-        domainRootScreenShotsFilder = eyewitnessFolder + '/domainRoot'
+        contentScreenShotsFolder = eyewitnessFolder + '/content'
+        domainRootScreenShotsFolder = eyewitnessFolder + '/domainRoot'
         incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
         statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
@@ -180,8 +180,8 @@ with open('programs.json') as programsFile:
         os.makedirs(subdomainTakeoverFolder, exist_ok=True, )
         os.makedirs(ffufFolder, exist_ok=True, )
         os.makedirs(eyewitnessFolder, exist_ok=True, )
-        os.makedirs(contentScreenShotsFilder, exist_ok=True, )
-        os.makedirs(domainRootScreenShotsFilder, exist_ok=True, )
+        os.makedirs(contentScreenShotsFolder, exist_ok=True, )
+        os.makedirs(domainRootScreenShotsFolder, exist_ok=True, )
                     
         for target in program['scope']:
             if target['inScope'] == True:
