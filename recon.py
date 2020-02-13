@@ -119,22 +119,22 @@ def statusForUrls(urlsTextFile, outputFile):
         for url in urls:
             strippedUrl = url.strip()
             status = probeURL(strippedUrl)
-            if 'statusCode' in status and 'statusCode' in statusForUrls[strippedUrl]:
-                if statusForUrls[strippedUrl]['statusCode'] != status['statusCode']:
-                    if args.noslack == None:
-                        message = 'Status code changed from ' + str(statusForUrls[strippedUrl]['statusCode']) + ' to ' + str(status['statusCode']) + ' for: ' + statusForUrls[strippedUrl]['url']
-                        print(message)
-                        postToSlack(config["slackWebhookURL"], message)
-            if 'ETag' in status and 'ETag' in statusForUrls[strippedUrl]:
-                if statusForUrls[strippedUrl]['ETag'] != status['ETag']:
-                    print('ETag changed from ' + str(statusForUrls[strippedUrl]['ETag']) + ' to ' + str(status['ETag']) + ' for: ' + statusForUrls[strippedUrl]['url'])
-            if 'contentLength' in status and 'contentLength' in statusForUrls[strippedUrl]:
-                if statusForUrls[strippedUrl]['contentLength'] != status['contentLength']:
-                    if args.noslack == None:
-                        message = 'Content length changed from ' + str(statusForUrls[strippedUrl]['contentLength']) + ' to ' + str(status['contentLength']) + ' for: ' + statusForUrls[strippedUrl]['url']
-                        print(message)
-                        postToSlack(config["slackWebhookURL"], message)
-            
+            if strippedUrl in statusForUrls:
+                if 'statusCode' in status and 'statusCode' in statusForUrls[strippedUrl]:
+                    if statusForUrls[strippedUrl]['statusCode'] != status['statusCode']:
+                        if args.noslack == None:
+                            message = 'Status code changed from ' + str(statusForUrls[strippedUrl]['statusCode']) + ' to ' + str(status['statusCode']) + ' for: ' + statusForUrls[strippedUrl]['url']
+                            print(message)
+                            postToSlack(config["slackWebhookURL"], message)
+                if 'ETag' in status and 'ETag' in statusForUrls[strippedUrl]:
+                    if statusForUrls[strippedUrl]['ETag'] != status['ETag']:
+                        print('ETag changed from ' + str(statusForUrls[strippedUrl]['ETag']) + ' to ' + str(status['ETag']) + ' for: ' + statusForUrls[strippedUrl]['url'])
+                if 'contentLength' in status and 'contentLength' in statusForUrls[strippedUrl]:
+                    if statusForUrls[strippedUrl]['contentLength'] != status['contentLength']:
+                        if args.noslack == None:
+                            message = 'Content length changed from ' + str(statusForUrls[strippedUrl]['contentLength']) + ' to ' + str(status['contentLength']) + ' for: ' + statusForUrls[strippedUrl]['url']
+                            print(message)
+                            postToSlack(config["slackWebhookURL"], message)
             statusForUrls[status['url']] = status
         with open(outputFile, 'w') as outFile:
             outFile.write(json.dumps(statusForUrls, indent=4))
