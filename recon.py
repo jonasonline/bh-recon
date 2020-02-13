@@ -13,6 +13,7 @@ parser.add_argument('--nowayback', action='store_const', const=True, help="Skip 
 parser.add_argument('--nohttprobe', action='store_const', const=True, help="Skip probing for live sites")
 parser.add_argument('--nocontent', action='store_const', const=True, help="Skip content discovery")
 parser.add_argument('--nosubdomaintakeover', action='store_const', const=True, help="Skip subdomain takeover check")
+parser.add_argument('--nourlstatus', action='store_const', const=True, help="Skip URL status check")
 parser.add_argument('--noeyewitness', action='store_const', const=True, help="Skip screen capture with EyeWitness")
 parser.add_argument('--nocontentscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
 parser.add_argument('--nodomainrootscreenshots', action='store_const', const=True, help="Skip screen capture of content with EyeWitness")
@@ -473,8 +474,9 @@ with open('programs.json') as programsFile:
         subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
 
         #Checking and logging status for URLs
-        statusForUrls(incrementalContentFile,statusForContentUrlsFile)
-        statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
+        if args.nourlstatus == None:
+            statusForUrls(incrementalContentFile,statusForContentUrlsFile)
+            statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
 
         #Capturing screenshots
         if args.noeyewitness == None:
