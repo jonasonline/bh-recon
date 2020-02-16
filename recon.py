@@ -139,6 +139,25 @@ def statusForUrls(urlsTextFile, outputFile):
         with open(outputFile, 'w') as outFile:
             outFile.write(json.dumps(statusForUrls, indent=4))
 
+def okUrlsToFile(inputJsonFile, outputTextFile):
+    if not os.path.exists(outputTextFile):
+            with open(outputTextFile, 'w+'):
+                print('Created file: ' + outputTextFile)
+    if os.path.exists(statusForContentUrlsFile):
+        outputUrls = set([])
+        with open(statusForContentUrlsFile, 'r') as read_file:
+            read_file.seek(0)
+            if read_file.read(1):
+                read_file.seek(0)
+                urls = json.load(read_file)
+                for url in urls:
+                    if 'url' in urls[url] and 'statusCode' in urls[url]:
+                        if urls[url]['statusCode'] == 200:
+                            urlToAdd = urls[url]['url']
+                            outputUrls.add(urlToAdd + "\n")
+        with open(outputTextFile, 'w') as outFile:
+            outFile.writelines(outputUrls)
+
 with open('config.json', 'r') as configFile:
     config = json.load(configFile)
 
@@ -478,14 +497,17 @@ with open('programs.json') as programsFile:
             statusForUrls(incrementalContentFile,statusForContentUrlsFile)
             statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
 
+        okUrlsToFile(statusForContentUrlsFile, 'okIncrementalContent.txt')
+        okUrlsToFile(statusForContentUrlsFile, 'okliveHttpDomains.txt')
+
         #Capturing screenshots
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
             if args.nocontentscreenshots == None:
-                scriptArguments = programName + ' incrementalContent.txt content' 
+                scriptArguments = programName + ' okIncrementalContent.txt content' 
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
                 print(scriptArguments)
-                scriptArguments = programName + ' liveHttpDomains.txt domainRoot' 
+                scriptArguments = programName + ' okliveHttpDomains.txt domainRoot' 
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
