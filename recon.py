@@ -191,6 +191,8 @@ with open('programs.json') as programsFile:
         statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
         statusForLiveHttpDomainsFile = './output/' + programName + '/statusForliveHttpDomains.txt'
+        okIncrementalContentFile = './output/' + programName + '/okIncrementalContent.txt'
+        okliveHttpDomainsFile = './output/' + programName + '/okLiveHttpDomains.txt'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -497,8 +499,8 @@ with open('programs.json') as programsFile:
             statusForUrls(incrementalContentFile,statusForContentUrlsFile)
             statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
 
-        okUrlsToFile(statusForContentUrlsFile, 'okIncrementalContent.txt')
-        okUrlsToFile(statusForContentUrlsFile, 'okliveHttpDomains.txt')
+        okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
+        okUrlsToFile(statusForContentUrlsFile, okliveHttpDomainsFile)
 
         #Capturing screenshots
         if args.noeyewitness == None:
