@@ -143,9 +143,9 @@ def okUrlsToFile(inputJsonFile, outputTextFile):
     if not os.path.exists(outputTextFile):
             with open(outputTextFile, 'w+'):
                 print('Created file: ' + outputTextFile)
-    if os.path.exists(statusForContentUrlsFile):
+    if os.path.exists(inputJsonFile):
         outputUrls = set([])
-        with open(statusForContentUrlsFile, 'r') as read_file:
+        with open(inputJsonFile, 'r') as read_file:
             read_file.seek(0)
             if read_file.read(1):
                 read_file.seek(0)
@@ -190,7 +190,7 @@ with open('programs.json') as programsFile:
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
         statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
-        statusForLiveHttpDomainsFile = './output/' + programName + '/statusForliveHttpDomains.txt'
+        statusForLiveHttpDomainsFile = './output/' + programName + '/statusForLiveHttpDomains.txt'
         okIncrementalContentFile = './output/' + programName + '/okIncrementalContent.txt'
         okliveHttpDomainsFile = './output/' + programName + '/okLiveHttpDomains.txt'
         os.makedirs(amassFolder, exist_ok=True, )
@@ -496,8 +496,8 @@ with open('programs.json') as programsFile:
 
         #Checking and logging status for URLs
         if args.nourlstatus == None:
-            statusForUrls(incrementalContentFile,statusForContentUrlsFile)
-            statusForUrls(liveHttpDomainsFile,statusForLiveHttpDomainsFile)
+            statusForUrls(incrementalContentFile, statusForContentUrlsFile)
+            statusForUrls(liveHttpDomainsFile, statusForLiveHttpDomainsFile)
 
         okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
         okUrlsToFile(statusForContentUrlsFile, okliveHttpDomainsFile)
