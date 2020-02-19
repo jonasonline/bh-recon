@@ -502,7 +502,7 @@ with open('programs.json') as programsFile:
             statusForUrls(liveHttpDomainsFile, statusForLiveHttpDomainsFile)
 
         okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
-        okUrlsToFile(statusForContentUrlsFile, okliveHttpDomainsFile)
+        okUrlsToFile(statusForLiveHttpDomainsFile, okliveHttpDomainsFile)
 
         #Capturing screenshots
         if args.noeyewitness == None:
