@@ -146,11 +146,13 @@ def okUrlsToFile(inputJsonFile, outputTextFile):
     if os.path.exists(inputJsonFile):
         outputUrls = set([])
         with open(inputJsonFile, 'r') as read_file:
+            print('Reading URLs from file: ' + inputJsonFile)
             read_file.seek(0)
             if read_file.read(1):
                 read_file.seek(0)
                 urls = json.load(read_file)
                 for url in urls:
+                    print('Checking URL: ' + url)
                     if 'url' in urls[url] and 'statusCode' in urls[url]:
                         if urls[url]['statusCode'] == 200:
                             urlToAdd = urls[url]['url']
