@@ -513,5 +513,5 @@ with open('programs.json') as programsFile:
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
                 print(scriptArguments)
-                scriptArguments = programName + ' okliveHttpDomains.txt domainRoot' 
+                scriptArguments = programName + ' okLiveHttpDomains.txt domainRoot' 
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
