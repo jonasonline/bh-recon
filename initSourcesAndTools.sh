@@ -56,8 +56,10 @@ cd ..
 #Reverting to original repo to test fix
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
 #git clone --branch VerifyDockerfilePatch https://github.com/jonasonline/EyeWitness.git
+sudo ./setup/setup.sh
 cd ..
-docker build --build-arg user=$USER --tag eyewitness lib/EyeWitness
+#Disabled docker as current ew image is buggy
+#docker build --build-arg user=$USER --tag eyewitness lib/EyeWitness
 
 # sudo chown root:root digAndMasscan.sh
 # sudo chmod 700 digAndMasscan.sh

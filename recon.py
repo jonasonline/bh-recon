@@ -508,10 +508,10 @@ with open('programs.json') as programsFile:
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
             if args.nocontentscreenshots == None:
-                scriptArguments = programName + ' okIncrementalContent.txt content' 
+                scriptArguments = programName + ' ' + okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content' 
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
+                scriptArguments = programName + ' ' + okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot'
                 print(scriptArguments)
-                scriptArguments = programName + ' okLiveHttpDomains.txt domainRoot' 
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
