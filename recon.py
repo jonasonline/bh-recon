@@ -1,5 +1,7 @@
-import json, os, subprocess, shutil, requests, argparse, datetime, socket
+import json, os, subprocess, shutil, requests, argparse, datetime, socket, urllib3
 from tld import get_tld
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 parser = argparse.ArgumentParser(description='Doing recon.')
 parser.add_argument('--program', help="Specify a program name ju run that program only.")
@@ -507,11 +509,11 @@ with open('programs.json') as programsFile:
         #Capturing screenshots
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
-            if args.nocontentscreenshots == None:
+            """ if args.nocontentscreenshots == None:
                 scriptArguments = programName + ' ' + okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content' 
                 print(scriptArguments)
-                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True) """
             if args.nodomainrootscreenshots == None:
-                scriptArguments = programName + ' ' + okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot'
+                scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot'
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
