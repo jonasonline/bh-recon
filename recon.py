@@ -430,11 +430,11 @@ with open('programs.json') as programsFile:
             print("Done running Wayback Machine discovery")
 
         #Checking subdomain takeover
-        print('Starting subdomain takeover check')
         if args.nosubdomaintakeover == None:
+            print('Starting subdomain takeover check')
             scriptArguments = '-w ' + incrementalDomainsFile + ' -c lib/subjack/fingerprints.json -t 100 -timeout 30 -ssl -o ' + subdomainTakeoverFolder + '/takeoverOutput.txt'
             subprocess.run('subjack ' + scriptArguments, shell=True)            
-        print('Done running subdomain takeover check')
+            print('Done running subdomain takeover check')
 
         #Content discovery
         if args.nocontent == None:
@@ -509,10 +509,10 @@ with open('programs.json') as programsFile:
         #Capturing screenshots
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
-            """ if args.nocontentscreenshots == None:
-                scriptArguments = programName + ' ' + okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content' 
+            if args.nocontentscreenshots == None:
+                scriptArguments = okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content' 
                 print(scriptArguments)
-                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True) """
+                subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
                 scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot'
                 print(scriptArguments)
