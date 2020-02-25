@@ -1,5 +1,9 @@
 import json, os, subprocess, shutil, requests, argparse, datetime, socket, urllib3
 from tld import get_tld
+from datetime import datetime
+
+now = datetime.now()
+dateString = now.strftime("%Y%m%d")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -510,10 +514,10 @@ with open('programs.json') as programsFile:
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
             if args.nocontentscreenshots == None:
-                scriptArguments = okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content' 
+                scriptArguments = okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content/' + dateString 
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
             if args.nodomainrootscreenshots == None:
-                scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot'
+                scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot/' + dateString
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
