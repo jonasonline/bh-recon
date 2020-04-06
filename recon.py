@@ -216,11 +216,11 @@ with open('programs.json') as programsFile:
         for target in program['scope']:
             if target['inScope'] == True:
                 if 'url' in target:
-                    print(target['url'])
+                    print('Adding URL: ' + target['url'])
                     uniqueURLs.add(target['url'])
                 elif 'domain' in target:
                     domainBase = target['domain'].replace('*.','')
-                    
+                    print('Adding domain: ' + domainBase)
                     #Saving old files for comparison 
                     amassDomainFolder = amassFolder + "/" + domainBase
                     if os.path.isdir(amassDomainFolder):
@@ -339,7 +339,7 @@ with open('programs.json') as programsFile:
         addContentDomain('URLs.txt')
         
         #Find live domains
-        print("Finding live domains")
+        print("Finding live domains with httprobe")
         if args.nohttprobe == None:
             scriptArguments = masscanIpListFile + ' ' + programName
             subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
