@@ -2,7 +2,7 @@ import json, os, subprocess, shutil, requests, argparse, socket, urllib3, dateti
 from tld import get_tld
 
 
-now = datetime.now()
+now = datetime.datetime.now()
 dateString = now.strftime("%Y%m%d")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
