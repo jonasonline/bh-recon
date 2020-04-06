@@ -1,6 +1,7 @@
 import json, os, subprocess, shutil, requests, argparse, socket, urllib3
-from tld import get_tld
 from datetime import datetime
+from tld import get_tld
+
 
 now = datetime.now()
 dateString = now.strftime("%Y%m%d")
