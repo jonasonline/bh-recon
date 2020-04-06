@@ -1,4 +1,4 @@
-import json, os, subprocess, shutil, requests, argparse, datetime, socket, urllib3
+import json, os, subprocess, shutil, requests, argparse, socket, urllib3
 from tld import get_tld
 from datetime import datetime
 
