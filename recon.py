@@ -1,4 +1,5 @@
 import json, os, subprocess, shutil, requests, argparse, socket, urllib3, datetime
+from multiprocessing import Pool
 from tld import get_tld
 
 
@@ -68,7 +69,7 @@ def findProbableWildcardDomains(jsonFilePath):
                 print('Error')
         return probableWildcardDomains
 
-def addContentDomain(inputURLTextFileName):
+def addContentDomain(inputURLTextFileName, incrementalContentDomains, programName):
     with open('./output/' + programName + '/' + inputURLTextFileName, 'r') as inputFile:
             inputFile.seek(0)
             incDomains = set(line.strip() for line in inputFile)
@@ -166,17 +167,7 @@ def okUrlsToFile(inputJsonFile, outputTextFile):
         with open(outputTextFile, 'w') as outFile:
             outFile.writelines(outputUrls)
 
-with open('config.json', 'r') as configFile:
-    config = json.load(configFile)
-
-with open('programs.json') as programsFile:
-    programs = json.load(programsFile)
-    for program in programs['programs']:
-        if program['enabled'] == False:
-            continue
-        if args.program and program['programName'] != args.program:
-            continue
-        
+def processProgram(program):
         firstRun = True
         uniqueDomains = set([])
         uniqueURLs = set([])
@@ -335,8 +326,8 @@ with open('programs.json') as programsFile:
                 incrementalContentDomains = json.load(contentDomains)
             else:
                 incrementalContentDomains = {}
-        addContentDomain('incrementalDomains.txt')
-        addContentDomain('URLs.txt')
+        addContentDomain('incrementalDomains.txt', incrementalContentDomains, programName)
+        addContentDomain('URLs.txt', incrementalContentDomains, programName)
         
         #Find live domains
         print("Finding live domains with httprobe")
@@ -490,7 +481,7 @@ with open('programs.json') as programsFile:
                                                 if contentURL not in incContent:
                                                     print('Adding ' + contentURL + ' to incremental list for ' + urlHttps)
                                                     inc.write("%s\n" % contentURL)
-                                                    addedDomains = True
+                                                    addedContent = True
                                 if addedContent and args.noslack == None:
                                     message = 'New content for ' + programName + ' domain: ' + domain
                                     print(message)
@@ -521,3 +512,22 @@ with open('programs.json') as programsFile:
                 scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot/' + dateString
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
+
+
+
+with open('config.json', 'r') as configFile:
+    config = json.load(configFile)
+
+with open('programs.json') as programsFile:
+    programs = json.load(programsFile)
+    setOfPrograms = set([])
+    for program in programs['programs']:
+        if program['enabled'] == False:
+            continue
+        if args.program and program['programName'] != args.program:
+            continue
+        setOfPrograms.add(program)
+        with Pool() as pool:
+            pool.map(processProgram, setOfPrograms)
+        
+
