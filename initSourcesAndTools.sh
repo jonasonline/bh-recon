@@ -9,17 +9,6 @@ wget -O ./wordlists/subdomains/jhaddix_all.txt https://gist.githubusercontent.co
 wget -O ./wordlists/directories/jhaddix_content_discovery_all.txt https://gist.githubusercontent.com/jhaddix/b80ea67d85c13206125806f0828f4d10/raw/c81a34fe84731430741e0463eb6076129c20c4c0/content_discovery_all.txt 
 wget -O ./wordlists/directories/content_discovery_nullenc0de.txt https://gist.githubusercontent.com/nullenc0de/96fb9e934fc16415fbda2f83f08b28e7/raw/146f367110973250785ced348455dc5173842ee4/content_discovery_nullenc0de.txt
 
-#installing and configuring pre-reqs
-#Docker
-sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io -y
-sudo groupadd docker
-sudo usermod -aG docker $USER
-newgrp docker
-
 sudo apt install python-pip -y
 sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
@@ -52,14 +41,10 @@ git clone https://github.com/robertdavidgraham/masscan
 cd masscan
 make
 cd ..
-#Bug in current build. Using fork as work around. 
-#Reverting to original repo to test fix
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
-#git clone --branch VerifyDockerfilePatch https://github.com/jonasonline/EyeWitness.git
+
 sudo ./setup/setup.sh
 cd ..
-#Disabled docker as current ew image is buggy
-#docker build --build-arg user=$USER --tag eyewitness lib/EyeWitness
 
 # sudo chown root:root digAndMasscan.sh
 # sudo chmod 700 digAndMasscan.sh
