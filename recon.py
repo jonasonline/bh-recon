@@ -168,6 +168,8 @@ def okUrlsToFile(inputJsonFile, outputTextFile):
             outFile.writelines(outputUrls)
 
 def processProgram(program):
+        if program['enabled'] == False:
+            return
         firstRun = True
         uniqueDomains = set([])
         uniqueURLs = set([])
@@ -223,9 +225,9 @@ def processProgram(program):
                     amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
                     #print(amassArguments)
                     if args.nodomainrecon == None:
-                        print("Starting Amass")
+                        print("Starting Amass for program: " + programName + " with domain: " + domainBase)
                         subprocess.run('amass enum ' + amassArguments, shell=True)
-                        print("Done running Amass")
+                        print("Done running Amass for program: " + programName + " with domain: " + domainBase)
 
                     #run subfinder
                     subfinderOutputFolder = './output/' + programName + '/subfinder/'
@@ -307,8 +309,8 @@ def processProgram(program):
                     print('Adding url ' + url + ' to url list for ' + programName)
                     urls.write("%s\n" % url)
                         
-        print("Done processing domain names")
-
+        print("Done processing domain names for program: " + programName)
+        return
         #TODO Process massdns output
         #TODO Implement dnsgen
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
@@ -521,7 +523,10 @@ with open('config.json', 'r') as configFile:
 with open('programs.json') as programsFile:
     programs = json.load(programsFile)
     setOfPrograms = set([])
-    for program in programs['programs']:
+    with Pool(processes=4) as pool:
+        pool.map(processProgram, programs['programs'])
+    
+    """ for program in programs['programs']:
         if program['enabled'] == False:
             continue
         if args.program and program['programName'] != args.program:
@@ -529,5 +534,5 @@ with open('programs.json') as programsFile:
         setOfPrograms.add(program)
         with Pool() as pool:
             pool.map(processProgram, setOfPrograms)
-        
+     """    
 
