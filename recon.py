@@ -310,9 +310,8 @@ def processProgram(program):
                     urls.write("%s\n" % url)
                         
         print("Done processing domain names for program: " + programName)
-        return
-        #TODO Process massdns output
-        #TODO Implement dnsgen
+        
+        #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
 
 
@@ -339,7 +338,7 @@ def processProgram(program):
             print("Done running httprobe")
 
         if args.nomassdns == None:
-            massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOutLive.json"
+            massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
             #Port scan domains. Not done if no massdns
@@ -347,7 +346,7 @@ def processProgram(program):
                 print("Starting port scan")
                 scannedDomains = set([])
                 ipList = set([])
-                with open('./output/' + programName + '/massDnsOutLive.json', 'r') as dnsRecords:
+                with open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecords:
                     dnsRecords.seek(0)
                     for dnsRecordRow in dnsRecords:
                         dnsRecord = json.loads(dnsRecordRow)
@@ -370,7 +369,7 @@ def processProgram(program):
                 domainsAndPorts = {}
                 domainsAndPortsFiltered = {} 
                 if os.path.isdir(masscanFolder):
-                    with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOutLive.json', 'r') as dnsRecordsFile :
+                    with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecordsFile :
                         masscanOutFile.seek(0)
                         for row in masscanOutFile:
                             if 'ip' in row:
@@ -524,15 +523,5 @@ with open('programs.json') as programsFile:
     programs = json.load(programsFile)
     setOfPrograms = set([])
     with Pool(processes=4) as pool:
-        pool.map(processProgram, programs['programs'])
-    
-    """ for program in programs['programs']:
-        if program['enabled'] == False:
-            continue
-        if args.program and program['programName'] != args.program:
-            continue
-        setOfPrograms.add(program)
-        with Pool() as pool:
-            pool.map(processProgram, setOfPrograms)
-     """    
+        pool.map(processProgram, programs['programs'])   
 
