@@ -194,6 +194,8 @@ def processProgram(program):
         statusForLiveHttpDomainsFile = './output/' + programName + '/statusForLiveHttpDomains.txt'
         okIncrementalContentFile = './output/' + programName + '/okIncrementalContent.txt'
         okliveHttpDomainsFile = './output/' + programName + '/okLiveHttpDomains.txt'
+        excludeDomainsFile = './output/' + programName + '/excludeDomainNames.json'
+        massDnsInputFile = './output/' + programName + '/massDnsInputDomainNames.txt'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -338,6 +340,25 @@ def processProgram(program):
             print("Done running httprobe")
 
         if args.nomassdns == None:
+            with open(incrementalDomainsFile, 'r') as incrementalDomains:
+                incrementalDomains.seek(0)
+                domainNameList = set([])
+                if os.path.exists(excludeDomainsFile):
+                    with open(excludeDomainsFile, 'r') as excludeDomainNamesFile:
+                        excludeDomainNamesFile.seek(0)
+                        excludeDomains = json.load(excludeDomainNamesFile)
+                        for domainName in incrementalDomains:
+                            domainNameList.add(domainName)
+                            if domainName in excludeDomains:
+                                if 'massdns' in excludeDomains[domainName]:
+                                    domainNameList.remove(domainName)
+                    with open(massDnsInputFile, 'w+') as massDnsInputDomainNames:
+                        for domainName in domainNameList:
+                            massDnsInputDomainNames.write("{}".format(domainName))
+                else:
+                    shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
+
+
             massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
@@ -489,27 +510,30 @@ def processProgram(program):
                                     postToSlack(config["slackWebhookURL"], message)
                             except:
                                 pass
-                print("Done running ffuf")
-        #Incrementing content
-        scriptArguments = ffufFolder + ' ' + outputFolder
-        subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
+            print("Done running ffuf")
+            #Incrementing content
+            if os.listdir(ffufFolder):
+                scriptArguments = ffufFolder + ' ' + outputFolder
+                subprocess.run('./incrementContent.sh ' + scriptArguments, shell=True)
 
         #Checking and logging status for URLs
         if args.nourlstatus == None:
-            statusForUrls(incrementalContentFile, statusForContentUrlsFile)
-            statusForUrls(liveHttpDomainsFile, statusForLiveHttpDomainsFile)
-
-        okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
-        okUrlsToFile(statusForLiveHttpDomainsFile, okliveHttpDomainsFile)
+            if os.path.exists(incrementalContentFile):
+                statusForUrls(incrementalContentFile, statusForContentUrlsFile)
+                okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
+                
+            if os.path.exists(incrementalContentFile):    
+                statusForUrls(liveHttpDomainsFile, statusForLiveHttpDomainsFile)
+                okUrlsToFile(statusForLiveHttpDomainsFile, okliveHttpDomainsFile)
 
         #Capturing screenshots
         if args.noeyewitness == None:
             #TODO input program name ($1), input file name ($2), output directory name ($3)
-            if args.nocontentscreenshots == None:
+            if args.nocontentscreenshots == None and os.path.exists(okIncrementalContentFile):
                 scriptArguments = okIncrementalContentFile + '  ./output/' + programName + '/eyewitness/content/' + dateString 
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)
-            if args.nodomainrootscreenshots == None:
+            if args.nodomainrootscreenshots == None and os.path.exists(okliveHttpDomainsFile):
                 scriptArguments = okliveHttpDomainsFile + '  ./output/' + programName + '/eyewitness/domainRoot/' + dateString
                 print(scriptArguments)
                 subprocess.run('./eyeWitnessCapture.sh ' + scriptArguments, shell=True)

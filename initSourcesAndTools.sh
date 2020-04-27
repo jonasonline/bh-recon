@@ -13,12 +13,13 @@ sudo apt install python-pip -y
 sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
 sudo apt-get install nmap -y
+sudo apt-get install git -y
 sudo snap install --classic go
 sudo snap install amass
 go get github.com/subfinder/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
-go get -u github.com/tomnomnom/httprobe
+go get github.com/tomnomnom/httprobe
 go get github.com/haccer/subjack
 sudo apt-get masscan -y
 pip3 install dnsgen
@@ -29,8 +30,6 @@ mkdir lib
 cd lib
 git clone https://github.com/danielmiessler/SecLists.git
 git clone https://github.com/OJ/gobuster.git
-git clone https://github.com/commixproject/commix.git commix
-git clone https://github.com/vysecurity/DomLink.git
 git clone https://github.com/haccer/subjack.git
 git clone https://github.com/blechschmidt/massdns.git
 cd massdns
@@ -42,8 +41,8 @@ cd masscan
 make
 cd ..
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
-
-sudo ./setup/setup.sh
+cd EyeWitness
+sudo ./Python/setup/setup.sh
 cd ..
 
 # sudo chown root:root digAndMasscan.sh
