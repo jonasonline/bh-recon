@@ -359,7 +359,7 @@ def processProgram(program):
                     shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
 
 
-            massdnsArguments = " -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
+            massdnsArguments = " -q -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
             #Port scan domains. Not done if no massdns
