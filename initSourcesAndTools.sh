@@ -16,7 +16,7 @@ sudo apt-get install nmap -y
 sudo apt-get install git -y
 sudo snap install --classic go
 sudo snap install amass
-go get github.com/subfinder/subfinder
+go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
 go get github.com/tomnomnom/httprobe
