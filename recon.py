@@ -240,7 +240,7 @@ def processProgram(program):
                         runSubfinder(programName, domainBase, subfinderOutputFolder)
                         print("Done running Subfinder")
 
-                    #Processing unique names
+                    #Processing amass unique names
                     print("Processing domain names for: " + domainBase)
                     #Amass unique names
                     for filename in os.listdir(amassDomainFolder):
