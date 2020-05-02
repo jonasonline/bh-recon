@@ -339,7 +339,7 @@ def processProgram(program):
             subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")
 
-        if args.nomassdns == None:
+        if args.nomassdns == None OR args.nodomainrecon == True:
             with open(incrementalDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
                 domainNameList = set([])
