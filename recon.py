@@ -207,6 +207,9 @@ def processProgram(program):
         os.makedirs(eyewitnessFolder, exist_ok=True, )
         os.makedirs(contentScreenShotsFolder, exist_ok=True, )
         os.makedirs(domainRootScreenShotsFolder, exist_ok=True, )
+
+        if args.program != None and args.program != program['programName']:
+            return
                     
         for target in program['scope']:
             if target['inScope'] == True:
@@ -339,6 +342,7 @@ def processProgram(program):
             subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")
 
+        #Run massdns
         if args.nomassdns == None or args.nodomainrecon == True:
             with open(incrementalDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
@@ -545,7 +549,6 @@ with open('config.json', 'r') as configFile:
 
 with open('programs.json') as programsFile:
     programs = json.load(programsFile)
-    setOfPrograms = set([])
     with Pool(processes=4) as pool:
         pool.map(processProgram, programs['programs'])   
 
