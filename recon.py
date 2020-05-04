@@ -212,6 +212,7 @@ def processProgram(program):
             return
                     
         for target in program['scope']:
+            wildcardDomains = set([])
             if target['inScope'] == True:
                 if 'url' in target:
                     print('Adding URL: ' + target['url'])
