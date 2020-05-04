@@ -444,8 +444,8 @@ def processProgram(program):
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
 
-            subprocess.run('cat output/' + programName + '/incrementalDomains.txt | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
-            subprocess.run('cat output/' + programName + '/URLs.txt | waybackurls >> output/' + programName + '/waybackurlsOut.txt', shell=True)
+            subprocess.run('cat output/' + programName + '/incrementalDomains.txt | sort | uniq | waybackurls > output/' + programName + '/waybackurlsOut.txt', shell=True)
+            subprocess.run('cat output/' + programName + '/URLs.txt | sort | uniq | waybackurls >> output/' + programName + '/waybackurlsOut.txt', shell=True)
             #cleaning output
             subprocess.run("sed -i '/^$/d'  output/" + programName + "/waybackurlsOut.txt", shell=True)
             print("Done running Wayback Machine discovery")
