@@ -1,4 +1,4 @@
-import json, os, subprocess, shutil, requests, argparse, socket, urllib3, datetime
+import json, os, subprocess, shutil, requests, argparse, socket, urllib3, datetime, pydig
 from multiprocessing import Pool
 from tld import get_tld
 
@@ -37,37 +37,37 @@ def runSubfinder(programName, domainBase, outputFolder):
     #print(subfinderArguments)
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
-def findProbableWildcardDomains(jsonFilePath):
-    with open(jsonFilePath) as subOut:
-        probableWildcardDomains = set([]) 
-        data = subOut.read()
-        subOut.seek(0)
-        output = json.load(subOut)
-        for domain in output:    
-            try:    
-                sanitizedDomain = domain.lstrip('.')
-                res = get_tld("https://" + sanitizedDomain, fail_silently=True, as_object=True)
-                baseDomain = res.fld
-                subDomains = sanitizedDomain.split("." + baseDomain) 
-                subDomains = subDomains[0]
-                subDomains = subDomains.split(".")
-                subDomains.reverse()
-                tryDomain = baseDomain
+def testForWildcardDomains(domainSet):
+    wildcardDomains = set([])
+    for domain in domainSet:
+        try:
+            topLevelDomain = get_tld("https://" + domain, fail_silently=True, as_object=True)
+            baseDomain = topLevelDomain.fld
+            topLevelDomain = topLevelDomain.tld
+            subDomains = domain.split("." + baseDomain)
+            if len(subDomains) <= 1:
+                continue 
+            subDomains = subDomains[0]
+            subDomains = subDomains.split(".")
+            referenceResponse = set(pydig.query(domain, 'A'))
+            if len(referenceResponse) >= 1:
                 for subDomain in subDomains:
-                    tryDomain = subDomain + "." + tryDomain
-                    if data.count(tryDomain) > 5:
-                        probe = "noresult." + tryDomain
-                        try:
-                            socket.gethostbyname(probe)
-                            socket.gethostbyname("testingforwildcard." + tryDomain)
-                            socket.gethostbyname("gydjfchvmlvdruiuhcoshlvn." + tryDomain)
-                            probableWildcardDomains.add(tryDomain)
-                            break
-                        except:
-                            pass
-            except Exception as e:
-                print('Error in wildcard domain check: ' + str(e))
-        return probableWildcardDomains
+                    try:
+                        probeDomain = '*.' + domain
+                        probeDomain = probeDomain.replace('*.' + subDomain + '.', '*.', 1)
+                        probeResponse = set(pydig.query(probeDomain, 'A'))
+                        if len(probeResponse) >= 1:
+                            if (len(referenceResponse - probeResponse) + len(probeResponse - referenceResponse)) == 0:
+                                wildcardDomains.add(domain)
+                                continue
+                    except Exception as e:
+                        print('Error in wildcard domain check: ' + str(e))
+                        pass
+                    
+        except Exception as e:
+            print('Error in wildcard domain check: ' + str(e))
+    return wildcardDomains
+
 
 def addContentDomain(inputURLTextFileName, incrementalContentDomains, programName):
     with open('./output/' + programName + '/' + inputURLTextFileName, 'r') as inputFile:
@@ -259,24 +259,22 @@ def processProgram(program):
                     for filename in os.listdir(subfinderOutputFolder):
                         if filename.endswith('.json'):
                             subfinderOutputFile = subfinderOutputFolder + '/' + filename
-                            wildcardDomains = findProbableWildcardDomains(subfinderOutputFile)
+                            #Parsing Subfinder output for wildcard domains.
+                            subfinderDomains = set([])
+                            with open(subfinderOutputFile) as subOut:
+                                subOut.seek(0)
+                                output = json.load(subOut)
+                                for domain in output:
+                                    sanitizedDomain = domain.lstrip('.')
+                                    subfinderDomains.add(sanitizedDomain)
+                            wildcardDomains = wildcardDomains + testForWildcardDomains(subfinderDomains)
+                            
                             with open(subfinderOutputFile) as subfinderOut:
                                 output = json.load(subfinderOut)
                                 for domain in output:    
-                                    addDomain = True
-                                    try:    
-                                        sanitizedDomain = domain.lstrip('.')
-                                        for wildcardDomain in wildcardDomains:
-                                            wildcardDomainSubdomain = "." + wildcardDomain
-                                            if wildcardDomainSubdomain in sanitizedDomain:
-                                                addDomain = False
-                                                break
-                                    except (KeyboardInterrupt, SystemExit):
-                                        exit()
-                                    except:
-                                        print('Error')
-                                    if addDomain:
-                                        uniqueDomains.add(sanitizedDomain)
+                                    sanitizedDomain = domain.lstrip('.')
+                                    if sanitizedDomain not in wildcardDomains:
+                                        uniqueDomains.add(sanitizedDomain)                                    
 
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
@@ -319,6 +317,10 @@ def processProgram(program):
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
 
+        #TODO improve wildcard domain logging
+        with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
+            for wildcardDomain in wildcardDomains:
+                wildcardDomainsFile.write("%s\n" % wildcardDomain)
 
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
