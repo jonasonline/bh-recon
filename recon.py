@@ -33,8 +33,7 @@ def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
 def runSubfinder(programName, domainBase, outputFolder):
-    subfinderArguments = '-d ' + domainBase + ' -o ' + outputFolder + domainBase + '.json -oJ -t 100 -v -r 1.1.1.1, 8.8.8.8, 9.9.9.9' 
-    #print(subfinderArguments)
+    subfinderArguments = '-d ' + domainBase + ' -o ' + outputFolder + domainBase + '.json -oJ -nW -t 100 -v -r 1.1.1.1, 8.8.8.8, 9.9.9.9' 
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
 def testForWildcardDomains(domainSet):
