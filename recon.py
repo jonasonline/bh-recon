@@ -1,4 +1,4 @@
-import json, os, subprocess, shutil, requests, argparse, socket, urllib3, datetime, pydig
+import json, os, subprocess, shutil, requests, argparse, socket, urllib3, datetime, pydig, sys
 from multiprocessing import Pool
 from tld import get_tld
 
@@ -32,8 +32,8 @@ def postToSlack(webhookURL, message):
 def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
-def runSubfinder(programName, domainBase, outputFolder):
-    subfinderArguments = '-d ' + domainBase + ' -o ' + outputFolder + domainBase + '.json -oJ -nW -t 100 -v -r 1.1.1.1, 8.8.8.8, 9.9.9.9' 
+def runSubfinder(programName, domainsFilePath, outputFolder):
+    subfinderArguments = '-dL ' + domainsFilePath + ' -o ' + outputFolder + '.json -oJ -nW -t 100 -v -r 1.1.1.1, 8.8.8.8, 9.9.9.9' 
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
 def testForWildcardDomains(domainSet):
@@ -209,9 +209,9 @@ def processProgram(program):
 
         if args.program != None and args.program != program['programName']:
             return
-                    
+        wildcardDomains = set([])
+        rootDomainsInScope = set([])            
         for target in program['scope']:
-            wildcardDomains = set([])
             if target['inScope'] == True:
                 if 'url' in target:
                     print('Adding URL: ' + target['url'])
@@ -219,62 +219,69 @@ def processProgram(program):
                 elif 'domain' in target:
                     domainBase = target['domain'].replace('*.','')
                     print('Adding domain: ' + domainBase)
-                    #Saving old files for comparison 
-                    amassDomainFolder = amassFolder + "/" + domainBase
-                    if os.path.isdir(amassDomainFolder):
-                        for filename in os.listdir(amassDomainFolder):
-                            if not filename.endswith('.old'):
-                                shutil.copy(amassDomainFolder + '/' + filename, amassDomainFolder + '/' + filename + '.old')
+                    rootDomainsInScope.add(domainBase)
 
-                    #run amass
-                    amassArguments = '-active -d ' + domainBase + ' -dir ./output/' + programName + '/amass/' + domainBase + '/'
-                    #print(amassArguments)
-                    if args.nodomainrecon == None:
-                        print("Starting Amass for program: " + programName + " with domain: " + domainBase)
-                        subprocess.run('amass enum ' + amassArguments, shell=True)
-                        print("Done running Amass for program: " + programName + " with domain: " + domainBase)
+        with open('./output/' + programName + '/rootDomainsInScope.txt', 'w') as rootDomainsInScopeFile:
+            for index, rootDomain in enumerate(rootDomainsInScope):
+                if index + 1 < len(rootDomainsInScope):
+                    rootDomainsInScopeFile.write("%s\n" % rootDomain)
+                else:
+                    rootDomainsInScopeFile.write("%s" % rootDomain)
+        
+        #Saving old files for comparison 
+        if os.path.isdir(amassFolder):
+            for filename in os.listdir(amassFolder):
+                if not filename.endswith('.old'):
+                    shutil.copy(amassFolder + '/' + filename, amassFolder + '/' + filename + '.old')
 
-                    #run subfinder
-                    subfinderOutputFolder = './output/' + programName + '/subfinder/'
-                    if args.nodomainrecon == None:
-                        if not os.path.exists(subfinderOutputFolder):
-                            os.makedirs(subfinderOutputFolder)
-                        print("Starting Subfinder")
-                        runSubfinder(programName, domainBase, subfinderOutputFolder)
-                        print("Done running Subfinder")
+        #run amass
+        amassArguments = '-active -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/'
+        if args.nodomainrecon == None:
+            print("Starting Amass for program: " + programName)
+            subprocess.run('amass enum ' + amassArguments, shell=True)
+            print("Done running Amass for program: " + programName)
+        
+        #run subfinder
+        subfinderOutputFolder = './output/' + programName + '/subfinder/'
+        if args.nodomainrecon == None:
+            if not os.path.exists(subfinderOutputFolder):
+                os.makedirs(subfinderOutputFolder)
+            print("Starting Subfinder")
+            runSubfinder(programName, './output/' + programName + '/rootDomainsInScope.txt', subfinderOutputFolder)
+            print("Done running Subfinder")
 
-                    #Processing amass unique names
-                    print("Processing domain names for: " + domainBase)
-                    #Amass unique names
-                    for filename in os.listdir(amassDomainFolder):
-                        if filename.endswith('.json') and not filename.endswith('_data.json'):
-                            with open(amassDomainFolder + '/' + filename) as amassOut:
-                                for line in amassOut:
-                                    try:    
-                                        output = json.loads(line)
-                                        uniqueDomains.add(output['name'])
-                                    except:
-                                        print('Error')
-                    #Subfinder unique names
-                    for filename in os.listdir(subfinderOutputFolder):
-                        if filename.endswith('.json'):
-                            subfinderOutputFile = subfinderOutputFolder + '/' + filename
-                            #Parsing Subfinder output for wildcard domains.
-                            subfinderDomains = set([])
-                            with open(subfinderOutputFile) as subOut:
-                                subOut.seek(0)
-                                output = json.load(subOut)
-                                for domain in output:
-                                    sanitizedDomain = domain.lstrip('.')
-                                    subfinderDomains.add(sanitizedDomain)
-                            wildcardDomains = wildcardDomains + testForWildcardDomains(subfinderDomains)
-                            
-                            with open(subfinderOutputFile) as subfinderOut:
-                                output = json.load(subfinderOut)
-                                for domain in output:    
-                                    sanitizedDomain = domain.lstrip('.')
-                                    if sanitizedDomain not in wildcardDomains:
-                                        uniqueDomains.add(sanitizedDomain)                                    
+        #Processing amass unique names
+        print("Processing domain names for: " + programName)
+        #Amass unique names
+        for filename in os.listdir(amassFolder):
+            if filename.endswith('.json') and not filename.endswith('_data.json'):
+                with open(amassFolder + '/' + filename) as amassOut:
+                    for line in amassOut:
+                        try:    
+                            output = json.loads(line)
+                            uniqueDomains.add(output['name'])
+                        except:
+                            print('Error')
+        #Subfinder unique names
+        for filename in os.listdir(subfinderOutputFolder):
+            if filename.endswith('.json'):
+                subfinderOutputFile = subfinderOutputFolder + '/' + filename
+                #Parsing Subfinder output for wildcard domains.
+                subfinderDomains = set([])
+                with open(subfinderOutputFile) as subOut:
+                    subOut.seek(0)
+                    output = json.load(subOut)
+                    for domain in output:
+                        sanitizedDomain = domain.lstrip('.')
+                        subfinderDomains.add(sanitizedDomain)
+                wildcardDomains = wildcardDomains + testForWildcardDomains(subfinderDomains)
+                
+                with open(subfinderOutputFile) as subfinderOut:
+                    output = json.load(subfinderOut)
+                    for domain in output:    
+                        sanitizedDomain = domain.lstrip('.')
+                        if sanitizedDomain not in wildcardDomains:
+                            uniqueDomains.add(sanitizedDomain)                                    
 
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
@@ -302,15 +309,21 @@ def processProgram(program):
             with open(incrementalDomainsFile, 'a+') as inc:
                 inc.seek(0)
                 incDomains = set(line.strip() for line in inc)
-                for domain in currentDataSet:
+                for index, domain in enumerate(currentDataSet):
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
-                        inc.write("%s\n" % domain)
+                        if index + 1 < len(incDomains):
+                            inc.write("%s\n" % domain)
+                        else:
+                            inc.write("%s" % domain)
         with open('./output/' + programName + '/URLs.txt', 'w+') as urls:
                 urls.seek(0)
-                for url in uniqueURLs:
+                for index, url in enumerate(uniqueURLs):
                     print('Adding url ' + url + ' to url list for ' + programName)
-                    urls.write("%s\n" % url)
+                    if index + 1 < len(uniqueURLs): 
+                        urls.write("%s\n" % url)
+                    else:
+                        urls.write("%s" % url)
                         
         print("Done processing domain names for program: " + programName)
         
@@ -319,8 +332,11 @@ def processProgram(program):
 
         #TODO improve wildcard domain logging
         with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
-            for wildcardDomain in wildcardDomains:
-                wildcardDomainsFile.write("%s\n" % wildcardDomain)
+            for index, wildcardDomain in enumerate(wildcardDomains):
+                if index + 1 < len(wildcardDomains):
+                    wildcardDomainsFile.write("%s\n" % wildcardDomain)
+                else:
+                    wildcardDomainsFile.write("%s" % wildcardDomain)
 
         #add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
