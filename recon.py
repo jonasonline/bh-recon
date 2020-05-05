@@ -233,7 +233,7 @@ def processProgram(program):
         if args.nodomainrecon == None:
             print("Starting Amass for program: " + programName)
             print(amassArguments)
-            #subprocess.run('amass enum ' + amassArguments, shell=True)
+            subprocess.run('amass enum ' + amassArguments, shell=True)
             print("Done running Amass for program: " + programName)
         
         #run subfinder
