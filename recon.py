@@ -34,7 +34,7 @@ def myconverter(o):
         return o.__str__()
 def runSubfinder(programName, domainsFilePath, outputFile):
     subfinderArguments = ' -dL ' + domainsFilePath + ' -nW -t 100 -silent > ' + outputFile
-    print(subfinderArguments)
+    #print(subfinderArguments)
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
 def testForWildcardDomains(domainSet):
@@ -232,7 +232,7 @@ def processProgram(program):
         amassArguments = ' -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/ --json ./output/LINE/amass/amass_' + programName + ' .json -r 9.9.9.9, 8.8.8.8, 1.1.1.1'
         if args.nodomainrecon == None:
             print("Starting Amass for program: " + programName)
-            print(amassArguments)
+            #print(amassArguments)
             subprocess.run('amass enum ' + amassArguments, shell=True)
             print("Done running Amass for program: " + programName)
         
@@ -261,7 +261,6 @@ def processProgram(program):
             if filename.endswith('.json'):
                 subfinderOutputFile = subfinderOutputFolder + 'subfinder_out.txt'
                 #Parsing Subfinder output for wildcard domains.
-                subfinderDomains = set([])
                 with open(subfinderOutputFile) as subOut:
                     subOut.seek(0)
                     for domain in subOut:    
@@ -440,8 +439,9 @@ def processProgram(program):
         
         #TODO Do not check wildcard domains
         #Find live domains
-        print("Finding live domains with httprobe")
         if args.nohttprobe == None:
+            print("Finding live domains with httprobe")
+            print('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile)
             subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")        
 
