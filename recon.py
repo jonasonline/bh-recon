@@ -32,8 +32,9 @@ def postToSlack(webhookURL, message):
 def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
-def runSubfinder(programName, domainsFilePath, outputFolder):
-    subfinderArguments = '-dL ' + domainsFilePath + ' -o ' + outputFolder + '.json -oJ -nW -t 100 -v -r 1.1.1.1, 8.8.8.8, 9.9.9.9' 
+def runSubfinder(programName, domainsFilePath, outputFile):
+    subfinderArguments = ' -dL ' + domainsFilePath + ' -nW -t 100 -silent > ' + outputFile
+    print(subfinderArguments)
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
 def testForWildcardDomains(domainSet):
@@ -227,18 +228,12 @@ def processProgram(program):
                     rootDomainsInScopeFile.write("%s\n" % rootDomain)
                 else:
                     rootDomainsInScopeFile.write("%s" % rootDomain)
-        
-        #Saving old files for comparison 
-        if os.path.isdir(amassFolder):
-            for filename in os.listdir(amassFolder):
-                if not filename.endswith('.old'):
-                    shutil.copy(amassFolder + '/' + filename, amassFolder + '/' + filename + '.old')
-
         #run amass
-        amassArguments = '-active -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/'
+        amassArguments = ' -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/ --json ./output/LINE/amass/amass_' + programName + ' .json -r 9.9.9.9, 8.8.8.8, 1.1.1.1'
         if args.nodomainrecon == None:
             print("Starting Amass for program: " + programName)
-            subprocess.run('amass enum ' + amassArguments, shell=True)
+            print(amassArguments)
+            #subprocess.run('amass enum ' + amassArguments, shell=True)
             print("Done running Amass for program: " + programName)
         
         #run subfinder
@@ -247,42 +242,31 @@ def processProgram(program):
             if not os.path.exists(subfinderOutputFolder):
                 os.makedirs(subfinderOutputFolder)
             print("Starting Subfinder")
-            runSubfinder(programName, './output/' + programName + '/rootDomainsInScope.txt', subfinderOutputFolder)
+            runSubfinder(programName, './output/' + programName + '/rootDomainsInScope.txt', subfinderOutputFolder + 'subfinder_out.txt')
             print("Done running Subfinder")
 
         #Processing amass unique names
         print("Processing domain names for: " + programName)
         #Amass unique names
-        for filename in os.listdir(amassFolder):
-            if filename.endswith('.json') and not filename.endswith('_data.json'):
-                with open(amassFolder + '/' + filename) as amassOut:
-                    for line in amassOut:
-                        try:    
-                            output = json.loads(line)
-                            uniqueDomains.add(output['name'])
-                        except:
-                            print('Error')
+        with open(amassFolder + '/amass_' + programName + '.json') as amassOut:
+            for line in amassOut:
+                try:    
+                    output = json.loads(line)
+                    uniqueDomains.add(output['name'])
+                except:
+                    print('Error')
+                
         #Subfinder unique names
         for filename in os.listdir(subfinderOutputFolder):
             if filename.endswith('.json'):
-                subfinderOutputFile = subfinderOutputFolder + '/' + filename
+                subfinderOutputFile = subfinderOutputFolder + 'subfinder_out.txt'
                 #Parsing Subfinder output for wildcard domains.
                 subfinderDomains = set([])
                 with open(subfinderOutputFile) as subOut:
                     subOut.seek(0)
-                    output = json.load(subOut)
-                    for domain in output:
-                        sanitizedDomain = domain.lstrip('.')
-                        subfinderDomains.add(sanitizedDomain)
-                wildcardDomains = wildcardDomains + testForWildcardDomains(subfinderDomains)
-                
-                with open(subfinderOutputFile) as subfinderOut:
-                    output = json.load(subfinderOut)
-                    for domain in output:    
-                        sanitizedDomain = domain.lstrip('.')
-                        if sanitizedDomain not in wildcardDomains:
-                            uniqueDomains.add(sanitizedDomain)                                    
-
+                    for domain in subOut:    
+                        uniqueDomains.add(domain)                                    
+                        
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
             firstRun = False
@@ -329,16 +313,8 @@ def processProgram(program):
         
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
-
-        #TODO improve wildcard domain logging
-        with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
-            for index, wildcardDomain in enumerate(wildcardDomains):
-                if index + 1 < len(wildcardDomains):
-                    wildcardDomainsFile.write("%s\n" % wildcardDomain)
-                else:
-                    wildcardDomainsFile.write("%s" % wildcardDomain)
-
-        #add domains to incremental content domain list
+        
+        #Add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
         if not os.path.exists(contentDomainsFilePath):
             with open(contentDomainsFilePath, 'w+') as contentDomains:
@@ -353,13 +329,6 @@ def processProgram(program):
         addContentDomain('incrementalDomains.txt', incrementalContentDomains, programName)
         addContentDomain('URLs.txt', incrementalContentDomains, programName)
         
-        #Find live domains
-        print("Finding live domains with httprobe")
-        if args.nohttprobe == None:
-            scriptArguments = masscanIpListFile + ' ' + programName
-            subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
-            print("Done running httprobe")
-
         #Run massdns
         if args.nomassdns == None or args.nodomainrecon == True:
             with open(incrementalDomainsFile, 'r') as incrementalDomains:
@@ -457,7 +426,25 @@ def processProgram(program):
                                     scriptArguments = str(ipAdresses[ipAdress][0]['port']) + " " + filteredDomain.rstrip('.') + " " + programName
                                     print(scriptArguments)
                                     subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                print('Done banner grabbing')       
+                print('Done banner grabbing')  
+
+
+        #TODO improve wildcard domain logging
+        if os.path.isfile('./output/' + programName + '/wildcardDomains.txt') and len(wildcardDomains) > 0:
+            with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
+                for index, wildcardDomain in enumerate(wildcardDomains):
+                    if index + 1 < len(wildcardDomains):
+                        wildcardDomainsFile.write("%s\n" % wildcardDomain)
+                    else:
+                        wildcardDomainsFile.write("%s" % wildcardDomain)
+        
+        #TODO Do not check wildcard domains
+        #Find live domains
+        print("Finding live domains with httprobe")
+        if args.nohttprobe == None:
+            subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
+            print("Done running httprobe")        
+
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
