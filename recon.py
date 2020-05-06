@@ -188,6 +188,7 @@ def processProgram(program):
         contentScreenShotsFolder = eyewitnessFolder + '/content'
         domainRootScreenShotsFolder = eyewitnessFolder + '/domainRoot'
         incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
+        incrementalNonWildcardDomainsFile = './output/' + programName + '/incrementalNonWildcardDomainsFile.txt'
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
         statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
@@ -264,8 +265,8 @@ def processProgram(program):
                 with open(subfinderOutputFile) as subOut:
                     subOut.seek(0)
                     for domain in subOut:    
-                        uniqueDomains.add(domain)                                    
-                        
+                        uniqueDomains.add(domain)
+                
         #compare old and new current domains
         if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
             firstRun = False
@@ -285,6 +286,11 @@ def processProgram(program):
                             print(message)
                             postToSlack(config["slackWebhookURL"], message)
             
+        
+        wildcardDomains = testForWildcardDomains(uniqueDomains)
+        nonWildcardDomains = uniqueDomains - wildcardDomains
+        
+        
         #add domains to incremental domain list
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
             currentData = json.load(current)
@@ -295,7 +301,17 @@ def processProgram(program):
                 for index, domain in enumerate(currentDataSet):
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
-                        if index + 1 < len(incDomains):
+                        if index + 1 < len(currentDataSet):
+                            inc.write("%s\n" % domain)
+                        else:
+                            inc.write("%s" % domain)
+            with open(incrementalNonWildcardDomainsFile, 'a+') as inc:
+                inc.seek(0)
+                incDomains = set(line.strip() for line in inc)
+                for index, domain in enumerate(nonWildcardDomains):
+                    if domain not in incDomains:
+                        print('Adding domain ' + domain + ' to incremental non-wildcard domains list for ' + programName)
+                        if index + 1 < len(nonWildcardDomains):
                             inc.write("%s\n" % domain)
                         else:
                             inc.write("%s" % domain)
@@ -307,11 +323,13 @@ def processProgram(program):
                         urls.write("%s\n" % url)
                     else:
                         urls.write("%s" % url)
-                        
-        print("Done processing domain names for program: " + programName)
+
+
         
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
+        
+        print("Done processing domain names for program: " + programName)
         
         #Add domains to incremental content domain list
         contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
@@ -330,7 +348,7 @@ def processProgram(program):
         
         #Run massdns
         if args.nomassdns == None or args.nodomainrecon == True:
-            with open(incrementalDomainsFile, 'r') as incrementalDomains:
+            with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
                 domainNameList = set([])
                 if os.path.exists(excludeDomainsFile):
@@ -347,85 +365,85 @@ def processProgram(program):
                             massDnsInputDomainNames.write("{}".format(domainName))
                 else:
                     shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
-
-
             massdnsArguments = " -q -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
-            #Port scan domains. Not done if no massdns
-            if args.noportscan == None:
-                print("Starting port scan")
-                scannedDomains = set([])
-                ipList = set([])
-                with open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecords:
-                    dnsRecords.seek(0)
-                    for dnsRecordRow in dnsRecords:
-                        dnsRecord = json.loads(dnsRecordRow)
-                        if 'resp_type' in dnsRecord:
-                            if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
-                                dnsName = dnsRecord['query_name'].rstrip('.')
-                                dnsData = dnsRecord['data'] 
-                                if dnsName not in scannedDomains:
-                                    scannedDomains.add(dnsName)
-                                    ipList.add(dnsData)
-                with open(masscanIpListFile, 'w+') as masscanIPList:
-                    for ipAddress in ipList:
-                        masscanIPList.write("{}\n".format(ipAddress))
-                #Running Masscan        
-                scriptArguments = masscanIpListFile + ' ' + programName
-                subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
-                print("Done running port scan")
+        #Port scan domains. Not done if no massdns file exist
+        if args.noportscan == None and os.path.exists('./output/' + programName + '/massDnsOut.json'):
+            print("Starting port scan")
+            scannedDomains = set([])
+            ipList = set([])
+            with open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecords:
+                dnsRecords.seek(0)
+                for dnsRecordRow in dnsRecords:
+                    dnsRecord = json.loads(dnsRecordRow)
+                    if 'resp_type' in dnsRecord:
+                        if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
+                            dnsName = dnsRecord['query_name'].rstrip('.')
+                            dnsData = dnsRecord['data'] 
+                            if dnsName not in scannedDomains:
+                                scannedDomains.add(dnsName)
+                                ipList.add(dnsData)
+            with open(masscanIpListFile, 'w+') as masscanIPList:
+                for ipAddress in ipList:
+                    masscanIPList.write("{}\n".format(ipAddress))
+            #Running Masscan        
+            scriptArguments = masscanIpListFile + ' ' + programName
+            subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
+            print("Done running port scan")
 
-                #Summarizing findings
-                domainsAndPorts = {}
-                domainsAndPortsFiltered = {} 
-                if os.path.isdir(masscanFolder):
-                    with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecordsFile :
-                        masscanOutFile.seek(0)
-                        for row in masscanOutFile:
-                            if 'ip' in row:
-                                record = json.loads(row.rstrip(',\n'))
-                                ipAddress = record['ip'] 
-                                dnsRecordsFile.seek(0)
-                                for dnsRecordRow in dnsRecordsFile:
-                                    dnsRecord = json.loads(dnsRecordRow)
-                                    if 'resp_type' in dnsRecord:
-                                        if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
-                                            dnsName = dnsRecord['query_name'].rstrip('.')
-                                            dnsIp = dnsRecord['data'] 
-                                            if ipAddress == dnsIp:
-                                                if dnsRecord['resp_name'] in domainsAndPorts:
-                                                    domainsAndPorts[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
-                                                else:    
-                                                    domainsAndPorts[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
-                                                for port in record['ports']:
-                                                    if port['port'] not in [80, 443]:
-                                                        if dnsRecord['resp_name'] in domainsAndPortsFiltered:
-                                                            domainsAndPortsFiltered[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
-                                                            break
-                                                        else:    
-                                                            domainsAndPortsFiltered[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
-                                                            break
-                                dnsRecordsFile.seek(0)
-                    with open('./output/' + programName + '/domainsAndPorts.json', 'w+') as f:
-                            json.dump(domainsAndPorts, f)
-                    with open('./output/' + programName + '/domainsAndPortsFiltered.json', 'w+') as f:
-                            json.dump(domainsAndPortsFiltered, f)
-            if args.nobanner == None:
-                #Banner Grabbing
-                print('Starting banner grabbing')
-                filteredDomainsFilePath = './output/' + programName + '/domainsAndPortsFiltered.json'
-                if os.path.exists(filteredDomainsFilePath): 
-                    with open(filteredDomainsFilePath, 'r+') as filteredDomainsFile:
-                        filteredDomainsFile.seek(0)
-                        filteredDomains = json.load(filteredDomainsFile)
-                        for filteredDomain in filteredDomains:
-                            for ipAdresses in filteredDomains[filteredDomain]['ipAdresses']:
-                                for ipAdress in ipAdresses:
-                                    scriptArguments = str(ipAdresses[ipAdress][0]['port']) + " " + filteredDomain.rstrip('.') + " " + programName
-                                    print(scriptArguments)
-                                    subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
-                print('Done banner grabbing')  
+            #Summarizing findings
+            domainsAndPorts = {}
+            domainsAndPortsFiltered = {} 
+            if os.path.isdir(masscanFolder):
+                with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecordsFile :
+                    masscanOutFile.seek(0)
+                    for row in masscanOutFile:
+                        if 'ip' in row:
+                            record = json.loads(row.rstrip(',\n'))
+                            ipAddress = record['ip'] 
+                            dnsRecordsFile.seek(0)
+                            for dnsRecordRow in dnsRecordsFile:
+                                dnsRecord = json.loads(dnsRecordRow)
+                                if 'resp_type' in dnsRecord:
+                                    if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
+                                        dnsName = dnsRecord['query_name'].rstrip('.')
+                                        dnsIp = dnsRecord['data'] 
+                                        if ipAddress == dnsIp:
+                                            if dnsRecord['resp_name'] in domainsAndPorts:
+                                                domainsAndPorts[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
+                                            else:    
+                                                domainsAndPorts[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
+                                            for port in record['ports']:
+                                                if port['port'] not in [80, 443]:
+                                                    if dnsRecord['resp_name'] in domainsAndPortsFiltered:
+                                                        domainsAndPortsFiltered[dnsRecord['resp_name']]['ipAdresses'].append({ipAddress: record['ports']})
+                                                        break
+                                                    else:    
+                                                        domainsAndPortsFiltered[dnsRecord['resp_name']] = {'ipAdresses':[{ipAddress: record['ports']}]}
+                                                        break
+                            dnsRecordsFile.seek(0)
+                with open('./output/' + programName + '/domainsAndPorts.json', 'w+') as f:
+                        json.dump(domainsAndPorts, f)
+                with open('./output/' + programName + '/domainsAndPortsFiltered.json', 'w+') as f:
+                        json.dump(domainsAndPortsFiltered, f)
+
+
+        if args.nobanner == None and os.path.exists('./output/' + programName + '/domainsAndPortsFiltered.json'):
+            #Banner Grabbing
+            print('Starting banner grabbing')
+            filteredDomainsFilePath = './output/' + programName + '/domainsAndPortsFiltered.json'
+            if os.path.exists(filteredDomainsFilePath): 
+                with open(filteredDomainsFilePath, 'r+') as filteredDomainsFile:
+                    filteredDomainsFile.seek(0)
+                    filteredDomains = json.load(filteredDomainsFile)
+                    for filteredDomain in filteredDomains:
+                        for ipAdresses in filteredDomains[filteredDomain]['ipAdresses']:
+                            for ipAdress in ipAdresses:
+                                scriptArguments = str(ipAdresses[ipAdress][0]['port']) + " " + filteredDomain.rstrip('.') + " " + programName
+                                print(scriptArguments)
+                                subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
+            print('Done banner grabbing')  
 
 
         #TODO improve wildcard domain logging
