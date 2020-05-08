@@ -21,3 +21,4 @@ lib
 .vscode/settings.json
 config.json
 amass_config.ini
+geckodriver.log

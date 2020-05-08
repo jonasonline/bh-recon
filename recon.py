@@ -33,7 +33,7 @@ def myconverter(o):
     if isinstance(o, datetime.datetime):
         return o.__str__()
 def runSubfinder(programName, domainsFilePath, outputFile):
-    subfinderArguments = ' -dL ' + domainsFilePath + ' -nW -t 100 -silent > ' + outputFile
+    subfinderArguments = ' -dL ' + domainsFilePath + ' -nW -t 50 -silent > ' + outputFile
     #print(subfinderArguments)
     subprocess.run('~/go/bin/subfinder ' + subfinderArguments, shell=True)
 
@@ -284,12 +284,10 @@ def processProgram(program):
                         if domain not in oldDataSet and firstRun == False and args.noslack == None:
                             message = 'New domain for ' + programName + ': ' + domain
                             print(message)
-                            postToSlack(config["slackWebhookURL"], message)
-            
+                            postToSlack(config["slackWebhookURL"], message)            
         
         wildcardDomains = testForWildcardDomains(uniqueDomains)
-        nonWildcardDomains = uniqueDomains - wildcardDomains
-        
+        nonWildcardDomains = uniqueDomains - wildcardDomains        
         
         #add domains to incremental domain list
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
@@ -323,8 +321,6 @@ def processProgram(program):
                         urls.write("%s\n" % url)
                     else:
                         urls.write("%s" % url)
-
-
         
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
@@ -347,7 +343,7 @@ def processProgram(program):
         addContentDomain('URLs.txt', incrementalContentDomains, programName)
         
         #Run massdns
-        if args.nomassdns == None or args.nodomainrecon == True:
+        if args.nomassdns == None and args.nodomainrecon == None:
             with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
                 domainNameList = set([])
@@ -365,7 +361,7 @@ def processProgram(program):
                             massDnsInputDomainNames.write("{}".format(domainName))
                 else:
                     shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
-            massdnsArguments = " -q -r lib/massdns/lists/resolvers.txt output/" + programName + "/incrementalDomains.txt -o J -w output/" + programName + "/massDnsOut.json"
+            massdnsArguments = ' -q -r lib/massdns/lists/resolvers.txt ' + incrementalNonWildcardDomainsFile + ' -o J -w output/' + programName + '/massDnsOut.json'
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
 
         #Port scan domains. Not done if no massdns file exist
@@ -445,7 +441,6 @@ def processProgram(program):
                                 subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
             print('Done banner grabbing')  
 
-
         #TODO improve wildcard domain logging
         if os.path.isfile('./output/' + programName + '/wildcardDomains.txt') and len(wildcardDomains) > 0:
             with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
@@ -459,8 +454,7 @@ def processProgram(program):
         #Find live domains
         if args.nohttprobe == None:
             print("Finding live domains with httprobe")
-            print('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile)
-            subprocess.run('cat ' + incrementalDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
+            subprocess.run('cat ' + incrementalNonWildcardDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")        
 
         #Find URLs from wayback machine
@@ -549,7 +543,7 @@ def processProgram(program):
                 statusForUrls(incrementalContentFile, statusForContentUrlsFile)
                 okUrlsToFile(statusForContentUrlsFile, okIncrementalContentFile)
                 
-            if os.path.exists(incrementalContentFile):    
+            if os.path.exists(liveHttpDomainsFile):    
                 statusForUrls(liveHttpDomainsFile, statusForLiveHttpDomainsFile)
                 okUrlsToFile(statusForLiveHttpDomainsFile, okliveHttpDomainsFile)
 
@@ -572,6 +566,6 @@ with open('config.json', 'r') as configFile:
 
 with open('programs.json') as programsFile:
     programs = json.load(programsFile)
-    with Pool(processes=4) as pool:
+    with Pool() as pool:
         pool.map(processProgram, programs['programs'])   
 
