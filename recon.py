@@ -266,29 +266,11 @@ def processProgram(program):
                     subOut.seek(0)
                     for domain in subOut:    
                         uniqueDomains.add(domain)
-                
-        #compare old and new current domains
-        if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
-            firstRun = False
-            shutil.copy('./output/' + programName + '/sortedDomains.json', './output/' + programName + '/sortedDomains.json.old')
-        with open('./output/' + programName + '/sortedDomains.json', 'w') as f:
-            json.dump(sorted(uniqueDomains), f)
-        if os.path.isfile('./output/' + programName + '/sortedDomains.json.old'):
-            with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
-                currentData = json.load(current)
-                currentDataSet = set(currentData)
-                with open('./output/' + programName + '/sortedDomains.json.old', 'r') as old:
-                    oldData = json.load(old)
-                    oldDataSet = set(oldData)
-                    for domain in currentDataSet:
-                        if domain not in oldDataSet and firstRun == False and args.noslack == None:
-                            message = 'New domain for ' + programName + ': ' + domain
-                            print(message)
-                            postToSlack(config["slackWebhookURL"], message)            
-        
+
+        #Filter wildcard domains
         wildcardDomains = testForWildcardDomains(uniqueDomains)
-        nonWildcardDomains = uniqueDomains - wildcardDomains        
-        
+        nonWildcardDomains = uniqueDomains - wildcardDomains 
+
         #add domains to incremental domain list
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
             currentData = json.load(current)
@@ -321,27 +303,7 @@ def processProgram(program):
                         urls.write("%s\n" % url)
                     else:
                         urls.write("%s" % url)
-        
-        #TODO Implement dnsgen and massdns in combo
-        #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
-        
-        print("Done processing domain names for program: " + programName)
-        
-        #Add domains to incremental content domain list
-        contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
-        if not os.path.exists(contentDomainsFilePath):
-            with open(contentDomainsFilePath, 'w+') as contentDomains:
-                print('Created file: ' + contentDomainsFilePath)
-        with open(contentDomainsFilePath, 'r') as contentDomains:
-            contentDomains.seek(0)
-            if contentDomains.read(1):
-                contentDomains.seek(0)    
-                incrementalContentDomains = json.load(contentDomains)
-            else:
-                incrementalContentDomains = {}
-        addContentDomain('incrementalDomains.txt', incrementalContentDomains, programName)
-        addContentDomain('URLs.txt', incrementalContentDomains, programName)
-        
+
         #Run massdns
         if args.nomassdns == None and args.nodomainrecon == None:
             with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
@@ -363,10 +325,8 @@ def processProgram(program):
                     shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
             massdnsArguments = ' -q -r lib/massdns/lists/resolvers.txt ' + incrementalNonWildcardDomainsFile + ' -o J -w output/' + programName + '/massDnsOut.json'
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
-
-        #Port scan domains. Not done if no massdns file exist
-        if args.noportscan == None and os.path.exists('./output/' + programName + '/massDnsOut.json'):
-            print("Starting port scan")
+            
+            #Processing output and creating input for masscan
             scannedDomains = set([])
             ipList = set([])
             with open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecords:
@@ -383,12 +343,58 @@ def processProgram(program):
             with open(masscanIpListFile, 'w+') as masscanIPList:
                 for ipAddress in ipList:
                     masscanIPList.write("{}\n".format(ipAddress))
-            #Running Masscan        
+            massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
+            massDNSDomains = scannedDomains - massDNSWildcardDomains
+
+        #TODO Implement dnsgen and massdns in combo
+        #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
+        
+        #TODO Implement massdns output file management
+
+        #compare old and new current domains
+        if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
+            firstRun = False
+            shutil.copy('./output/' + programName + '/sortedDomains.json', './output/' + programName + '/sortedDomains.json.old')
+        with open('./output/' + programName + '/sortedDomains.json', 'w') as f:
+            json.dump(sorted(uniqueDomains), f)
+        if os.path.isfile('./output/' + programName + '/sortedDomains.json.old'):
+            with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
+                currentData = json.load(current)
+                currentDataSet = set(currentData)
+                with open('./output/' + programName + '/sortedDomains.json.old', 'r') as old:
+                    oldData = json.load(old)
+                    oldDataSet = set(oldData)
+                    for domain in currentDataSet:
+                        if domain not in oldDataSet and firstRun == False and args.noslack == None:
+                            message = 'New domain for ' + programName + ': ' + domain
+                            print(message)
+                            postToSlack(config["slackWebhookURL"], message)                   
+        
+        print("Done processing domain names for program: " + programName)
+        
+        #Add domains to incremental content domain list
+        contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
+        if not os.path.exists(contentDomainsFilePath):
+            with open(contentDomainsFilePath, 'w+') as contentDomains:
+                print('Created file: ' + contentDomainsFilePath)
+        with open(contentDomainsFilePath, 'r') as contentDomains:
+            contentDomains.seek(0)
+            if contentDomains.read(1):
+                contentDomains.seek(0)    
+                incrementalContentDomains = json.load(contentDomains)
+            else:
+                incrementalContentDomains = {}
+        addContentDomain('incrementalDomains.txt', incrementalContentDomains, programName)
+        addContentDomain('URLs.txt', incrementalContentDomains, programName)
+
+        #Port scan domains. Not done if no massdns file exist
+        if args.noportscan == None and os.path.exists(masscanIpListFile):
+            print("Starting port scan")
             scriptArguments = masscanIpListFile + ' ' + programName
             subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
 
-            #Summarizing findings
+            #Processing findings
             domainsAndPorts = {}
             domainsAndPortsFiltered = {} 
             if os.path.isdir(masscanFolder):
