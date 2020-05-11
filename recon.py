@@ -68,6 +68,24 @@ def testForWildcardDomains(domainSet):
             print('Error in wildcard domain check: ' + str(e))
     return wildcardDomains
 
+def dumpToSortedDomainsFile(programName, uniqueDomains):
+    #compare old and new current domains
+    if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
+        shutil.copy('./output/' + programName + '/sortedDomains.json', './output/' + programName + '/sortedDomains.json.old')
+    with open('./output/' + programName + '/sortedDomains.json', 'w') as f:
+        json.dump(sorted(uniqueDomains), f)
+    if os.path.isfile('./output/' + programName + '/sortedDomains.json.old'):
+        with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
+            currentData = json.load(current)
+            currentDataSet = set(currentData)
+            with open('./output/' + programName + '/sortedDomains.json.old', 'r') as old:
+                oldData = json.load(old)
+                oldDataSet = set(oldData)
+                for domain in currentDataSet:
+                    if domain not in oldDataSet and args.noslack == None:
+                        message = 'New domain for ' + programName + ': ' + domain
+                        print(message)
+                        postToSlack(config["slackWebhookURL"], message)    
 
 def addContentDomain(inputURLTextFileName, incrementalContentDomains, programName):
     with open('./output/' + programName + '/' + inputURLTextFileName, 'r') as inputFile:
@@ -271,6 +289,8 @@ def processProgram(program):
         wildcardDomains = testForWildcardDomains(uniqueDomains)
         nonWildcardDomains = uniqueDomains - wildcardDomains 
 
+        dumpToSortedDomainsFile(programName, uniqueDomains)
+
         #add domains to incremental domain list
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
             currentData = json.load(current)
@@ -349,26 +369,7 @@ def processProgram(program):
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
         
-        #TODO Implement massdns output file management
-
-        #compare old and new current domains
-        if os.path.isfile('./output/' + programName + '/sortedDomains.json'):
-            firstRun = False
-            shutil.copy('./output/' + programName + '/sortedDomains.json', './output/' + programName + '/sortedDomains.json.old')
-        with open('./output/' + programName + '/sortedDomains.json', 'w') as f:
-            json.dump(sorted(uniqueDomains), f)
-        if os.path.isfile('./output/' + programName + '/sortedDomains.json.old'):
-            with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
-                currentData = json.load(current)
-                currentDataSet = set(currentData)
-                with open('./output/' + programName + '/sortedDomains.json.old', 'r') as old:
-                    oldData = json.load(old)
-                    oldDataSet = set(oldData)
-                    for domain in currentDataSet:
-                        if domain not in oldDataSet and firstRun == False and args.noslack == None:
-                            message = 'New domain for ' + programName + ': ' + domain
-                            print(message)
-                            postToSlack(config["slackWebhookURL"], message)                   
+        #TODO Implement massdns output file management                   
         
         print("Done processing domain names for program: " + programName)
         
