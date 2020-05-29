@@ -269,13 +269,13 @@ def processProgram(program):
         #Amass unique names
         amassJsonFile = amassFolder + '/amass_' + programName + '.json'
         if os.path.exists(amassJsonFile):
-        with open(amassJsonFile) as amassOut:
-            for line in amassOut:
-                try:    
-                    output = json.loads(line)
-                    uniqueDomains.add(output['name'])
-                except:
-                    print('Error')
+            with open(amassJsonFile) as amassOut:
+                for line in amassOut:
+                    try:    
+                        output = json.loads(line)
+                        uniqueDomains.add(output['name'])
+                    except:
+                        print('Error')
                 
         #Subfinder unique names
         for filename in os.listdir(subfinderOutputFolder):
