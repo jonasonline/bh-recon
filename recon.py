@@ -251,7 +251,7 @@ def processProgram(program):
         amassArguments = ' -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/ --json ./output/LINE/amass/amass_' + programName + '.json -r 9.9.9.9, 8.8.8.8, 1.1.1.1'
         if args.nodomainrecon == None:
             print("Starting Amass for program: " + programName)
-            #print(amassArguments)
+            print(amassArguments)
             subprocess.run('amass enum ' + amassArguments, shell=True)
             print("Done running Amass for program: " + programName)
         
@@ -267,7 +267,9 @@ def processProgram(program):
         #Processing amass unique names
         print("Processing domain names for: " + programName)
         #Amass unique names
-        with open(amassFolder + '/amass_' + programName + '.json') as amassOut:
+        amassJsonFile = amassFolder + '/amass_' + programName + '.json'
+        if os.path.exists(amassJsonFile):
+        with open(amassJsonFile) as amassOut:
             for line in amassOut:
                 try:    
                     output = json.loads(line)
