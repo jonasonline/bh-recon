@@ -248,7 +248,7 @@ def processProgram(program):
                 else:
                     rootDomainsInScopeFile.write("%s" % rootDomain)
         #run amass
-        amassArguments = ' -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/ --json ./output/LINE/amass/amass_' + programName + '.json -r 9.9.9.9, 8.8.8.8, 1.1.1.1'
+        amassArguments = ' -df ./output/' + programName + '/rootDomainsInScope.txt -dir ./output/' + programName + '/amass/ --json ./output/' + programName + '/amass/amass_' + programName + '.json -r 9.9.9.9, 8.8.8.8, 1.1.1.1'
         if args.nodomainrecon == None:
             print("Starting Amass for program: " + programName)
             print(amassArguments)
