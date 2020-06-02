@@ -351,22 +351,24 @@ def processProgram(program):
             #Processing output and creating input for masscan
             scannedDomains = set([])
             ipList = set([])
-            with open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecords:
-                dnsRecords.seek(0)
-                for dnsRecordRow in dnsRecords:
-                    dnsRecord = json.loads(dnsRecordRow)
-                    if 'resp_type' in dnsRecord:
-                        if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
-                            dnsName = dnsRecord['query_name'].rstrip('.')
-                            dnsData = dnsRecord['data'] 
-                            if dnsName not in scannedDomains:
-                                scannedDomains.add(dnsName)
-                                ipList.add(dnsData)
-            with open(masscanIpListFile, 'w+') as masscanIPList:
-                for ipAddress in ipList:
-                    masscanIPList.write("{}\n".format(ipAddress))
-            massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
-            massDNSDomains = scannedDomains - massDNSWildcardDomains
+            massDnsOutFile = './output/' + programName + '/massDnsOut.json'
+            if os.stat(massDnsOutFile).st_size > 0:
+                with open(massDnsOutFile, 'r') as dnsRecords:
+                    dnsRecords.seek(0)
+                    for dnsRecordRow in dnsRecords:
+                        dnsRecord = json.loads(dnsRecordRow)
+                        if 'resp_type' in dnsRecord:
+                            if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
+                                dnsName = dnsRecord['query_name'].rstrip('.')
+                                dnsData = dnsRecord['data'] 
+                                if dnsName not in scannedDomains:
+                                    scannedDomains.add(dnsName)
+                                    ipList.add(dnsData)
+                with open(masscanIpListFile, 'w+') as masscanIPList:
+                    for ipAddress in ipList:
+                        masscanIPList.write("{}\n".format(ipAddress))
+                massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
+                massDNSDomains = scannedDomains - massDNSWildcardDomains
 
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
@@ -400,7 +402,7 @@ def processProgram(program):
             #Processing findings
             domainsAndPorts = {}
             domainsAndPortsFiltered = {} 
-            if os.path.isdir(masscanFolder):
+            if os.path.exists(masscanFolder + '/' + programName + '.masscanOut.json') and os.stat(masscanFolder + '/' + programName + '.masscanOut.json').st_size > 0 and os.path.exists('./output/' + programName + '/massDnsOut.json') and os.stat('./output/' + programName + '/massDnsOut.json').st_size > 0:
                 with open(masscanFolder + '/' + programName + '.masscanOut.json', 'r') as masscanOutFile, open('./output/' + programName + '/massDnsOut.json', 'r') as dnsRecordsFile :
                     masscanOutFile.seek(0)
                     for row in masscanOutFile:
