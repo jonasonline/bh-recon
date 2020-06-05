@@ -185,6 +185,18 @@ def okUrlsToFile(inputJsonFile, outputTextFile):
         with open(outputTextFile, 'w') as outFile:
             outFile.writelines(outputUrls)
 
+def isExcluded(name, exclusion, exclusionFile):
+    #File does not exist for all programs
+    isExcluded = False
+    if os.path.exists(exclusionFile):
+        with open(exclusionFile, 'r') as exclusionFile:
+            exclusionFile.seek(0)
+            excludeNames = json.load(exclusionFile)
+            if name in excludeNames:
+                if exclusion in excludeNames[name]:
+                    isExcluded = True
+    return isExcluded
+
 def processProgram(program):
         if program['enabled'] == False:
             return
@@ -207,13 +219,14 @@ def processProgram(program):
         domainRootScreenShotsFolder = eyewitnessFolder + '/domainRoot'
         incrementalDomainsFile = './output/' + programName + '/incrementalDomains.txt'
         incrementalNonWildcardDomainsFile = './output/' + programName + '/incrementalNonWildcardDomainsFile.txt'
+        wildcardDomainsFile = './output/' + programName + '/wildcardDomains.txt'
         incrementalContentFile = './output/' + programName + '/incrementalContent.txt'
         statusForContentUrlsFile = './output/' + programName + '/statusForContentUrls.txt'
         liveHttpDomainsFile = './output/' + programName + '/liveHttpDomains.txt'
         statusForLiveHttpDomainsFile = './output/' + programName + '/statusForLiveHttpDomains.txt'
         okIncrementalContentFile = './output/' + programName + '/okIncrementalContent.txt'
         okliveHttpDomainsFile = './output/' + programName + '/okLiveHttpDomains.txt'
-        excludeDomainsFile = './output/' + programName + '/excludeDomainNames.json'
+        excludeNamesFile = './output/' + programName + '/excludeNames.json'
         massDnsInputFile = './output/' + programName + '/massDnsInputDomainNames.txt'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
@@ -240,7 +253,20 @@ def processProgram(program):
                     domainBase = target['domain'].replace('*.','')
                     print('Adding domain: ' + domainBase)
                     rootDomainsInScope.add(domainBase)
-
+        
+        logFileSize = 0
+        URLsFile = './output/' + programName + '/URLs.txt'
+        if os.path.exists(URLsFile):
+            logFileSize = os.path.getsize(URLsFile)                    
+        with open('./output/' + programName + '/URLs.txt', 'w+') as urls:
+                urls.seek(0)
+                for index, url in enumerate(uniqueURLs):
+                    print('Adding url ' + url + ' to url list for ' + programName)
+                    if index == 0 and logFileSize == 0: 
+                        urls.write("%s" % url)
+                    else:
+                        urls.write("\n%s" % url)
+        
         with open('./output/' + programName + '/rootDomainsInScope.txt', 'w') as rootDomainsInScopeFile:
             for index, rootDomain in enumerate(rootDomainsInScope):
                 if index + 1 < len(rootDomainsInScope):
@@ -297,83 +323,95 @@ def processProgram(program):
         with open('./output/' + programName + '/sortedDomains.json', 'r') as current:
             currentData = json.load(current)
             currentDataSet = set(currentData)
+            logFileSize = 0
+            if os.path.exists(incrementalDomainsFile):
+                logFileSize = os.path.getsize(incrementalDomainsFile)
             with open(incrementalDomainsFile, 'a+') as inc:
                 inc.seek(0)
                 incDomains = set(line.strip() for line in inc)
                 for index, domain in enumerate(currentDataSet):
                     if domain not in incDomains:
                         print('Adding domain ' + domain + ' to incremental list for ' + programName)
-                        if index + 1 < len(currentDataSet):
-                            inc.write("%s\n" % domain)
-                        else:
+                        if index == 0 and logFileSize == 0:
                             inc.write("%s" % domain)
-            with open(incrementalNonWildcardDomainsFile, 'a+') as inc:
-                inc.seek(0)
-                incDomains = set(line.strip() for line in inc)
-                for index, domain in enumerate(nonWildcardDomains):
-                    if domain not in incDomains:
-                        print('Adding domain ' + domain + ' to incremental non-wildcard domains list for ' + programName)
-                        if index + 1 < len(nonWildcardDomains):
-                            inc.write("%s\n" % domain)
                         else:
-                            inc.write("%s" % domain)
-        with open('./output/' + programName + '/URLs.txt', 'w+') as urls:
-                urls.seek(0)
-                for index, url in enumerate(uniqueURLs):
-                    print('Adding url ' + url + ' to url list for ' + programName)
-                    if index + 1 < len(uniqueURLs): 
-                        urls.write("%s\n" % url)
+                            inc.write("\n%s" % domain)
+            
+        logFileSize = 0
+        if os.path.exists(incrementalNonWildcardDomainsFile):
+            logFileSize = os.path.getsize(incrementalNonWildcardDomainsFile)
+        with open(incrementalNonWildcardDomainsFile, 'a+') as inc:
+            inc.seek(0)
+            incDomains = set(line.strip() for line in inc)
+            for index, domain in enumerate(nonWildcardDomains):
+                if domain not in incDomains:
+                    print('Adding domain ' + domain + ' to incremental non-wildcard domains list for ' + programName)
+                    if index == 0 and logFileSize == 0:
+                        inc.write("%s" % domain)
                     else:
-                        urls.write("%s" % url)
+                        inc.write("\n%s" % domain)
 
         #Run massdns
         if args.nomassdns == None and args.nodomainrecon == None:
             with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
                 domainNameList = set([])
-                if os.path.exists(excludeDomainsFile):
-                    with open(excludeDomainsFile, 'r') as excludeDomainNamesFile:
-                        excludeDomainNamesFile.seek(0)
-                        excludeDomains = json.load(excludeDomainNamesFile)
-                        for domainName in incrementalDomains:
-                            domainNameList.add(domainName)
-                            if domainName in excludeDomains:
-                                if 'massdns' in excludeDomains[domainName]:
-                                    domainNameList.remove(domainName)
+                for domainName in incrementalDomains:
+                    domainNameList.add(domainName)
+                    if isExcluded(domainName, 'massdns', excludeNamesFile) ==  True:
+                        domainNameList.remove(domainName)
+
                     with open(massDnsInputFile, 'w+') as massDnsInputDomainNames:
                         for domainName in domainNameList:
                             massDnsInputDomainNames.write("{}".format(domainName))
                 else:
                     shutil.copyfile(incrementalDomainsFile, massDnsInputFile)
-            massdnsArguments = ' -q -r lib/massdns/lists/resolvers.txt ' + incrementalNonWildcardDomainsFile + ' -o J -w output/' + programName + '/massDnsOut.json'
+            massDnsOutFile = './output/' + programName + '/massDnsOut.json'
+            massdnsArguments = ' -q -r lib/massdns/lists/resolvers.txt ' + incrementalNonWildcardDomainsFile + ' -o J -w ' + massDnsOutFile
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
             
             #Processing output and creating input for masscan
             scannedDomains = set([])
             ipList = set([])
-            massDnsOutFile = './output/' + programName + '/massDnsOut.json'
             if os.stat(massDnsOutFile).st_size > 0:
                 with open(massDnsOutFile, 'r') as dnsRecords:
                     dnsRecords.seek(0)
                     for dnsRecordRow in dnsRecords:
                         dnsRecord = json.loads(dnsRecordRow)
-                        if 'resp_type' in dnsRecord:
-                            if dnsRecord['resp_type'] == 'A' and dnsRecord['query_name'] == dnsRecord['resp_name']:
-                                dnsName = dnsRecord['query_name'].rstrip('.')
+                        if 'type' in dnsRecord:
+                            if dnsRecord['type'] == 'A':
+                                dnsName = dnsRecord['name'].rstrip('.')
                                 dnsData = dnsRecord['data'] 
-                                if dnsName not in scannedDomains:
-                                    scannedDomains.add(dnsName)
-                                    ipList.add(dnsData)
+                                if 'answers' in dnsData:
+                                    for answer in dnsData['answers']:
+                                        if 'type' in answer:
+                                            if answer['type'] == 'A':
+                                                print('checking if ' + dnsName + ' is in scanned domains')
+                                                if dnsName not in scannedDomains:
+                                                    scannedDomains.add(dnsName)
+                                                    ipList.add(answer['data'])
                 with open(masscanIpListFile, 'w+') as masscanIPList:
                     for ipAddress in ipList:
                         masscanIPList.write("{}\n".format(ipAddress))
-                massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
-                massDNSDomains = scannedDomains - massDNSWildcardDomains
+                #TODO This causes problems when having root wildcard domains
+                #massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
+                #massDNSDomains = scannedDomains - massDNSWildcardDomains
 
         #TODO Implement dnsgen and massdns in combo
         #cat output/SEEK/incrementalDomains.txt | dnsgen - | ./lib/massdns/bin/massdns -r lib/massdns/lists/resolvers.txt -o J -w output/SEEK/massDnsOutDNSGen.json
         
-        #TODO Implement massdns output file management                   
+        #TODO Implement massdns output file management 
+
+        logFileSize = 0
+        if os.path.exists(wildcardDomainsFile):
+            logFileSize = os.path.getsize(wildcardDomainsFile)
+        if len(wildcardDomains) > 0:
+            with open('./output/' + programName + '/wildcardDomains.txt', 'w+') as file:
+                for index, wildcardDomain in enumerate(wildcardDomains):
+                    if index == 0 and logFileSize == 0:
+                        file.write("%s" % wildcardDomain)
+                    else:
+                        file.write("\n%s" % wildcardDomain)                  
         
         print("Done processing domain names for program: " + programName)
         
@@ -452,22 +490,13 @@ def processProgram(program):
                                 subprocess.run('sudo ./nmapBannerGrab.sh ' + scriptArguments, shell=True)
             print('Done banner grabbing')  
 
-        #TODO improve wildcard domain logging
-        if os.path.isfile('./output/' + programName + '/wildcardDomains.txt') and len(wildcardDomains) > 0:
-            with open('./output/' + programName + '/wildcardDomains.txt', 'w') as wildcardDomainsFile:
-                for index, wildcardDomain in enumerate(wildcardDomains):
-                    if index + 1 < len(wildcardDomains):
-                        wildcardDomainsFile.write("%s\n" % wildcardDomain)
-                    else:
-                        wildcardDomainsFile.write("%s" % wildcardDomain)
-        
         #TODO Do not check wildcard domains
         #Find live domains
         if args.nohttprobe == None:
             print("Finding live domains with httprobe")
             subprocess.run('cat ' + incrementalNonWildcardDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")        
-
+        sys.exit()
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")
