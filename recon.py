@@ -228,6 +228,7 @@ def processProgram(program):
         okliveHttpDomainsFile = './output/' + programName + '/okLiveHttpDomains.txt'
         excludeNamesFile = './output/' + programName + '/excludeNames.json'
         massDnsInputFile = './output/' + programName + '/massDnsInputDomainNames.txt'
+        contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
         os.makedirs(amassFolder, exist_ok=True, )
         os.makedirs(subfinderFolder, exist_ok=True, )
         os.makedirs(masscanFolder, exist_ok=True, )
@@ -406,7 +407,7 @@ def processProgram(program):
         if os.path.exists(wildcardDomainsFile):
             logFileSize = os.path.getsize(wildcardDomainsFile)
         if len(wildcardDomains) > 0:
-            with open('./output/' + programName + '/wildcardDomains.txt', 'w+') as file:
+            with open(wildcardDomainsFile, 'w+') as file:
                 for index, wildcardDomain in enumerate(wildcardDomains):
                     if index == 0 and logFileSize == 0:
                         file.write("%s" % wildcardDomain)
@@ -416,7 +417,6 @@ def processProgram(program):
         print("Done processing domain names for program: " + programName)
         
         #Add domains to incremental content domain list
-        contentDomainsFilePath = './output/' + programName + '/contentDomains.json'
         if not os.path.exists(contentDomainsFilePath):
             with open(contentDomainsFilePath, 'w+') as contentDomains:
                 print('Created file: ' + contentDomainsFilePath)
@@ -434,7 +434,8 @@ def processProgram(program):
         if args.noportscan == None and os.path.exists(masscanIpListFile):
             print("Starting port scan")
             scriptArguments = masscanIpListFile + ' ' + programName
-            subprocess.run('sudo ./masscan.sh ' + scriptArguments, shell=True)
+            cwd = os.getcwd()
+            subprocess.run('sudo ' + cwd + '/masscan.sh ' + scriptArguments, shell=True)
             print("Done running port scan")
 
             #Processing findings
@@ -496,7 +497,6 @@ def processProgram(program):
             print("Finding live domains with httprobe")
             subprocess.run('cat ' + incrementalNonWildcardDomainsFile + ' | httprobe > ' + liveHttpDomainsFile, shell=True)
             print("Done running httprobe")        
-        sys.exit()
         #Find URLs from wayback machine
         if args.nowayback == None:
             print("Starting Wayback Machine discovery")

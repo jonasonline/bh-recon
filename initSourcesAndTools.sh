@@ -10,6 +10,7 @@ sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
 sudo apt-get install nmap -y
 sudo apt-get install git -y
+sudo apt-get install masscan -y
 sudo snap install --classic go
 sudo snap install amass
 go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
@@ -29,11 +30,6 @@ git clone https://github.com/OJ/gobuster.git
 git clone https://github.com/haccer/subjack.git
 git clone https://github.com/blechschmidt/massdns.git
 cd massdns
-make
-cd ..
-sudo apt-get install git gcc make libpcap-dev -y
-git clone https://github.com/robertdavidgraham/masscan
-cd masscan
 make
 cd ..
 git clone https://github.com/FortyNorthSecurity/EyeWitness.git
