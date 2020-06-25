@@ -388,12 +388,16 @@ def processProgram(program):
                                         if 'type' in answer:
                                             if answer['type'] == 'A':
                                                 print('checking if ' + dnsName + ' is in scanned domains')
-                                                if dnsName not in scannedDomains:
+                                                if dnsName not in scannedDomains and answer['data'] not in ipList:
                                                     scannedDomains.add(dnsName)
                                                     ipList.add(answer['data'])
                 with open(masscanIpListFile, 'w+') as masscanIPList:
-                    for ipAddress in ipList:
-                        masscanIPList.write("{}\n".format(ipAddress))
+                    for index, ipAddress in enumerate(ipList):
+                    #for ipAddress in ipList:
+                        if index == 0:
+                            masscanIPList.write("{}".format(ipAddress))
+                        else:
+                            masscanIPList.write("\n{}".format(ipAddress))
                 #TODO This causes problems when having root wildcard domains
                 #massDNSWildcardDomains = testForWildcardDomains(scannedDomains)
                 #massDNSDomains = scannedDomains - massDNSWildcardDomains
