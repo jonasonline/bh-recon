@@ -5,6 +5,9 @@ wget -O ./wordlists/subdomains/jhaddix_all.txt https://gist.githubusercontent.co
 wget -O ./wordlists/directories/jhaddix_content_discovery_all.txt https://gist.githubusercontent.com/jhaddix/b80ea67d85c13206125806f0828f4d10/raw/c81a34fe84731430741e0463eb6076129c20c4c0/content_discovery_all.txt 
 wget -O ./wordlists/directories/content_discovery_nullenc0de.txt https://gist.githubusercontent.com/nullenc0de/96fb9e934fc16415fbda2f83f08b28e7/raw/146f367110973250785ced348455dc5173842ee4/content_discovery_nullenc0de.txt
 
+cat lib/SecLists/Discovery/DNS/bitquark-subdomains-top100000.txt lib/SecLists/Discovery/DNS/deepmagic.com-prefixes-top50000.txt lib/SecLists/Discovery/DNS/subdomains-top1million-110000.txt > wordlists/subdomains/subdomains_merged.txt
+uniq -u wordlists/subdomains/subdomains_merged.txt > wordlists/subdomains/subdomains_merged_unique.txt
+
 sudo apt install python-pip -y
 sudo apt-get install python3-pip -y
 sudo apt-get install python3-venv -y
@@ -17,6 +20,7 @@ go get -v github.com/projectdiscovery/subfinder/cmd/subfinder
 go get github.com/ffuf/ffuf
 go get github.com/tomnomnom/waybackurls
 go get github.com/tomnomnom/httprobe
+go get -u github.com/tomnomnom/hacks/ettu
 go get github.com/haccer/subjack
 sudo apt-get masscan -y
 pip3 install dnsgen
