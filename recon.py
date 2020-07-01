@@ -353,7 +353,7 @@ def processProgram(program):
                         inc.write("\n%s" % domain)
 
         #Run massdns
-        if args.nomassdns == None and args.nodomainrecon == None:
+        if args.nomassdns == None:
             print('Starting massdns')
             with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
