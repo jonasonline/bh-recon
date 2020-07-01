@@ -354,6 +354,7 @@ def processProgram(program):
 
         #Run massdns
         if args.nomassdns == None and args.nodomainrecon == None:
+            print('Starting massdns')
             with open(incrementalNonWildcardDomainsFile, 'r') as incrementalDomains:
                 incrementalDomains.seek(0)
                 domainNameList = set([])
@@ -372,6 +373,7 @@ def processProgram(program):
             subprocess.run('./lib/massdns/bin/massdns ' + massdnsArguments, shell=True)
             
             #Processing output and creating input for masscan
+            print('Processing output from massdns')
             scannedDomains = set([])
             ipList = set([])
             if os.stat(massDnsOutFile).st_size > 0:
